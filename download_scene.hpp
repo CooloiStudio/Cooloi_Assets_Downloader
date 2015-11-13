@@ -11,6 +11,8 @@
 
 #include "cocos2d.h"
 
+class AssetsDownload;
+
 class DownloadScene : public cocos2d::Layer
 {
 public:
@@ -18,9 +20,11 @@ public:
     
     virtual bool init();
     
-    int ReadVer(std::string file_name);
+    virtual void update(float dt);
     
-    int WriteVer(std::string file_name);
+    int ReadVer(const std::string file_name);
+    
+    int WriteVer(const std::string file_name);
     
     void Close();
     
@@ -30,6 +34,7 @@ public:
     
 #pragma mark - Variable
 private:
+    AssetsDownload *downloader_;
 };
 
 #endif /* DownloadScene_hpp */

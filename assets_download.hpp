@@ -48,8 +48,7 @@ protected:
     void set_percent(int percent) { percent_ = percent; }
     void set_status(const cocos2d::extension::AssetsManager::ErrorCode stauts) { status_ = stauts; }
     void set_success(bool is_success) {success_ = is_success;}
-    
-    
+
 #pragma mark - Variable
 private:
     int percent_;

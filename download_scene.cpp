@@ -59,40 +59,60 @@ bool DownloadScene::init()
     
     addChild(label);
     
-    WriteVer("test.json");
+    downloader_ = new AssetsDownload();
+    downloader_->init();
+    downloader_->Download();
     
-    ReadVer("test.json");
+    scheduleUpdate();
+    
+//    WriteVer("update_list.json");
+    
+//    ReadVer("update_list.json");
     
     return true;
 }
 
-
-int DownloadScene::ReadVer(std::string file_name)
+void DownloadScene::update(float dt)
 {
-    auto file = FileUtils::getInstance()->getStringFromFile(file_name);
-    auto file_content = file.c_str();
-    
-    if ("" == file)
+    if (downloader_->success())
     {
-        auto file_to_read = FileUtils::getInstance()->getWritablePath() + file_name;
-        std::ifstream infile(file_to_read);
+        unscheduleUpdate();
+        ReadVer("upload_list.json");
         
-        std::string str((std::istreambuf_iterator<char>(infile)),
-                        std::istreambuf_iterator<char>());
-        file_content = str.c_str();
     }
+}
+
+
+int DownloadScene::ReadVer(const std::string file_name)
+{
+//    log("File name: %s", file_name.c_str());
+    auto file_name_in_app = FileUtils::getInstance()->fullPathForFilename(file_name);
+    auto file = FileUtils::getInstance()->getStringFromFile(file_name_in_app);
+//    auto file_content = file.c_str();
+    
+//    if ("" == file)
+//    {
+//        auto file_to_read = FileUtils::getInstance()->getWritablePath()
+//        + "/download/"
+//        + file_name;
+//        std::ifstream infile(file_to_read);
+//        
+//        std::string str((std::istreambuf_iterator<char>(infile)),
+//                        std::istreambuf_iterator<char>());
+//        file_content = str.c_str();
+//    }
     
     
-    log("open file:\n----\n%s\n----", file_content);
+    log("open file:\n----\n%s\n----", file.c_str());
     
     rapidjson::Document d;
-    d.Parse<0>(file_content);
+    d.Parse<0>(file.c_str());
     
-    if (d.HasMember("a"))
-    {
-        auto a = d["a"].GetString();
-        log("a = %s", a);
-    }
+//    if (d.HasMember("a"))
+//    {
+//        auto a = d["a"].GetString();
+//        log("a = %s", a);
+//    }
     
     for (auto iter = d.MemberBegin(); iter != d.MemberEnd(); iter++)
     {
@@ -107,9 +127,9 @@ int DownloadScene::ReadVer(std::string file_name)
     return 0;
 }
 
-int DownloadScene::WriteVer(std::string file_name)
+int DownloadScene::WriteVer(const std::string file_name)
 {
-    auto file = FileUtils::getInstance()->getStringFromFile("version.json");
+    auto file = FileUtils::getInstance()->getStringFromFile(file_name);
     
     auto file_to_write = FileUtils::getInstance()->getWritablePath() + file_name;
     std::ofstream outfile;

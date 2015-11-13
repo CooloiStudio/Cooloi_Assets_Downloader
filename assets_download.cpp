@@ -24,8 +24,10 @@ percent_(0),
 status_(),
 success_(false),
 package_url_(""),
-version_url_("time.nist.gov")
+version_url_("")
 {
+    set_package_url("https://github.com/CooloiStudio/Cooloi_Assets_Downloader/raw/master/config/update_list.json.zip");
+    set_version_url("http://turanga.deskxd.com/thanks/pubdate/");
 }
 
 AssetsDownload::~AssetsDownload()
@@ -37,8 +39,6 @@ AssetsDownload::~AssetsDownload()
 bool AssetsDownload::init()
 {
     initDownloadDir();
-    getAssetManager()->update();
-    
     return true;
 }
 
@@ -84,7 +84,7 @@ void AssetsDownload::onProgress(int percent)
 
 void AssetsDownload::onSuccess()
 {
-    CCLOG("download success");
+    log("download success");
     set_success(true);
 }
 
@@ -110,10 +110,10 @@ AssetsManager* AssetsDownload::getAssetManager()
 
 void AssetsDownload::initDownloadDir()
 {
-    CCLOG("initDownloadDir");
+    log("initDownloadDir");
     path_to_save_ = FileUtils::getInstance()->getWritablePath();
     path_to_save_ += kDownloadPath;
-    CCLOG("Path: %s", path_to_save_.c_str());
+    log("Path: %s", path_to_save_.c_str());
 #if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
     DIR *pDir = NULL;
     pDir = opendir(path_to_save_.c_str());
@@ -121,11 +121,12 @@ void AssetsDownload::initDownloadDir()
     {
         mkdir(path_to_save_.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
     }
+    
 #else
     if ((GetFileAttributesA(path_to_save_.c_str())) == INVALID_FILE_ATTRIBUTES)
     {
         CreateDirectoryA(path_to_save_.c_str(), 0);
     }
 #endif
-    CCLOG("initDownloadDir end");
+    log("initDownloadDir end");
 }
