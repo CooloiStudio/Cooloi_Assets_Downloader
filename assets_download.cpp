@@ -22,9 +22,10 @@ AssetsDownload::AssetsDownload():
 path_to_save_(""),
 percent_(0),
 status_(),
-success_(false)
+success_(false),
+package_url_(""),
+version_url_("time.nist.gov")
 {
-    
 }
 
 AssetsDownload::~AssetsDownload()
@@ -91,13 +92,15 @@ AssetsManager* AssetsDownload::getAssetManager()
 {
     static AssetsManager *assetManager = NULL;
     
-    if (NULL == package_url_ || NULL == version_url_)
+    if ("" == package_url_ || "" == version_url_)
+    {
         return nullptr;
+    }
     
     if (!assetManager)
     {
-        assetManager = new AssetsManager(package_url_,
-                                         version_url_,
+        assetManager = new AssetsManager(package_url_.c_str(),
+                                         version_url_.c_str(),
                                          path_to_save_.c_str());
         assetManager->setDelegate(this);
         assetManager->setConnectionTimeout(3);

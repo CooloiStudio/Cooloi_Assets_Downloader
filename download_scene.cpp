@@ -61,22 +61,20 @@ bool DownloadScene::init()
     
     WriteVer("test.json");
     
-    ReadVer();
-    
+    ReadVer("test.json");
     
     return true;
 }
 
 
-int DownloadScene::ReadVer()
+int DownloadScene::ReadVer(std::string file_name)
 {
-    auto name = "test.json";
-    auto file = FileUtils::getInstance()->getStringFromFile(name);
+    auto file = FileUtils::getInstance()->getStringFromFile(file_name);
     auto file_content = file.c_str();
     
     if ("" == file)
     {
-        auto file_to_read = FileUtils::getInstance()->getWritablePath() + name;
+        auto file_to_read = FileUtils::getInstance()->getWritablePath() + file_name;
         std::ifstream infile(file_to_read);
         
         std::string str((std::istreambuf_iterator<char>(infile)),

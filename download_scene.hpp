@@ -18,7 +18,7 @@ public:
     
     virtual bool init();
     
-    int ReadVer();
+    int ReadVer(std::string file_name);
     
     int WriteVer(std::string file_name);
     
