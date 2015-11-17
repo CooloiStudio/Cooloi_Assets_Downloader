@@ -1,28 +1,26 @@
 //
-//  assets_download.cpp
-//  Turanga
+//  assets_downloader.cpp
+//  Cooloi_Assets_Downloader
 //
-//  Created by ZhongHan on 11/11/15.
+//  Created by ESoragoto on 11/16/15.
 //
 //
 
-#include "assets_download.hpp"
+#include "assets_downloader.hpp"
 
 #if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
 #include <dirent.h>
 #include <sys/stat.h>
 #endif
 
-USING_NS_CC;
-USING_NS_CC_EXT;
 
 const auto kDownloadPath = "download";	//下载后保存的文件夹名
 
-AssetsDownload::AssetsDownload():
+AssetsDownloader::AssetsDownloader():
 path_to_save_(""),
 percent_(0),
 status_(),
-success_(false),
+downloading_(false),
 def_pkg_url_("https://github.com/CooloiStudio/Cooloi_Assets_Downloader/raw/master/config/update_list.zip"),
 def_ver_url_("http://turanga.deskxd.com/thanks/pubdate/"),
 package_url_(""),
@@ -31,26 +29,64 @@ version_url_("")
     set_version_url(def_ver_url());
 }
 
-AssetsDownload::~AssetsDownload()
+AssetsDownloader::~AssetsDownloader()
 {
-    AssetsManager* assetManager = getAssetManager();
+    AssetsManager* assetManager = GetAssetManager();
     CC_SAFE_DELETE(assetManager);
 }
 
-bool AssetsDownload::init()
+bool AssetsDownloader::init()
 {
-    initDownloadDir();
+    InitDownloadDir();
     return true;
 }
 
-void AssetsDownload::Download(const std::string url)
+void AssetsDownloader::update(float delta)
 {
-    set_success(false);
-    set_package_url(url);
-    getAssetManager()->update();
+    if (false == downloading())
+    {
+        
+    }
 }
 
-int AssetsDownload::Reset()
+void AssetsDownloader::Download(const std::string url)
+{
+    set_downloading(true);
+    set_mode(DownloadMode::kOnce);
+    set_package_url(url);
+    GetAssetManager()->update();
+}
+
+int AssetsDownloader::DownloadMultiple(const std::map<std::string, std::string> pkg_vec)
+{
+    set_downloading(true);
+    set_package_map(pkg_vec);
+    set_mode(DownloadMode::kList);
+    DownloadUnit();
+    return 0;
+}
+
+int AssetsDownloader::DownloadUnit()
+{
+    if (!package_map().empty())
+    {
+        for (auto p : package_map())
+        {
+            set_now_downloading(p.first);
+            break;
+        }
+        set_package_url(package_map()[now_downloading()]);
+        package_map_.erase(package_map().begin());
+        GetAssetManager()->update();
+    }
+    else
+    {
+        set_downloading(false);
+    }
+    return 0;
+}
+
+int AssetsDownloader::Reset()
 {
     // Remove downloaded files
 #if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
@@ -69,33 +105,49 @@ int AssetsDownload::Reset()
     command += "\"" + path_to_save_ + "\"";
     system(command.c_str());
 #endif
-    getAssetManager()->deleteVersion();
-    initDownloadDir();
+    GetAssetManager()->deleteVersion();
+    InitDownloadDir();
     
     return 0;
 }
 
-void AssetsDownload::onError(AssetsManager::ErrorCode errorCode)
+void AssetsDownloader::onError(AssetsManager::ErrorCode errorCode)
 {
     set_status(errorCode);
 }
 
-void AssetsDownload::onProgress(int percent)
+void AssetsDownloader::onProgress(int percent)
 {
     set_percent(percent);
 }
 
-void AssetsDownload::onSuccess()
+void AssetsDownloader::onSuccess()
 {
     log("Download success!");
-    set_success(true);
+    switch (mode())
+    {
+        case DownloadMode::kOnce:
+        {
+            set_downloading(false);
+        }
+            break;
+            
+        case DownloadMode::kList:
+        {
+            DownloadUnit();
+        }
+            break;
+            
+        default:
+            break;
+    }
 }
 
-AssetsManager* AssetsDownload::getAssetManager()
+AssetsManager* AssetsDownloader::GetAssetManager()
 {
     static AssetsManager *assetManager = NULL;
     
-//    set_version_url(def_ver_url());
+    //    set_version_url(def_ver_url());
     if ("" == package_url())
     {
         set_package_url(def_pkg_url());
@@ -112,9 +164,9 @@ AssetsManager* AssetsDownload::getAssetManager()
     return assetManager;
 }
 
-void AssetsDownload::initDownloadDir()
+void AssetsDownloader::InitDownloadDir()
 {
-    log("initDownloadDir");
+    log("InitDownloadDir");
     path_to_save_ = FileUtils::getInstance()->getWritablePath();
     path_to_save_ += kDownloadPath;
     log("Path: %s", path_to_save_.c_str());
@@ -125,12 +177,11 @@ void AssetsDownload::initDownloadDir()
     {
         mkdir(path_to_save_.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
     }
-    
 #else
     if ((GetFileAttributesA(path_to_save_.c_str())) == INVALID_FILE_ATTRIBUTES)
     {
         CreateDirectoryA(path_to_save_.c_str(), 0);
     }
 #endif
-    log("initDownloadDir end");
+    log("InitDownloadDir end");
 }

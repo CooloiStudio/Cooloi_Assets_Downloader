@@ -61,9 +61,11 @@ bool DownloadScene::init()
     
     downloader_ = new AssetsDownload();
     downloader_->init();
-    downloader_->Download();
+    Download("");
     
-    scheduleUpdate();
+    
+    ReadVer("update_list.json");
+ 
     
 //    WriteVer("update_list.json");
     
@@ -77,30 +79,80 @@ void DownloadScene::update(float dt)
     if (downloader_->success())
     {
         unscheduleUpdate();
-        ReadVer("upload_list.json");
-        
+        ReadVer("update_list.json");
     }
 }
 
+void DownloadScene::DowanloadDone(float dt)
+{
+    log("Auuuu!");
+    if (downloader_->success())
+    {
+//        usleep(0);
+        set_dl_finished(true);
+        auto schedu = Director::getInstance()->getScheduler();
+        schedu->unschedule("ca", this);
+    }
+}
+
+int DownloadScene::Download(const std::string pkg_url)
+{
+    downloader_->Download(pkg_url);
+    
+    
+//    auto n = 0;
+//    while (!downloader_->success())
+//    {
+//        sleep(2);
+//        n++;
+//        log("%d", n);
+//        if (10 < n) break;
+//    }
+    
+    auto schedu = Director::getInstance()->getScheduler();
+    schedu->schedule(CC_CALLBACK_1(DownloadScene::DowanloadDone, this), //回调
+                     this, //当前对象
+                     0.1, //重复调用时间(s)
+                     CC_REPEAT_FOREVER, //重复次数
+                     0, //延迟调用时间(s)
+                     true, //是否暂停等待
+                     "ca"); //key
+    
+//    sleep(100);
+    return 0;
+}
 
 int DownloadScene::ReadVer(const std::string file_name)
 {
 //    log("File name: %s", file_name.c_str());
     auto file_name_in_app = FileUtils::getInstance()->fullPathForFilename(file_name);
+    
+    log("Full path: %s", file_name_in_app.c_str());
+    
     auto file = FileUtils::getInstance()->getStringFromFile(file_name_in_app);
 //    auto file_content = file.c_str();
     
-//    if ("" == file)
-//    {
+    if ("" == file)
+    {
 //        auto file_to_read = FileUtils::getInstance()->getWritablePath()
 //        + "/download/"
 //        + file_name;
-//        std::ifstream infile(file_to_read);
-//        
-//        std::string str((std::istreambuf_iterator<char>(infile)),
-//                        std::istreambuf_iterator<char>());
-//        file_content = str.c_str();
-//    }
+        
+        auto file_to_read = downloader_->path_to_save() + "/" + file_name;
+        
+        log("Full path: %s", file_to_read.c_str());
+        std::ifstream infile(file_to_read);
+        
+        if (infile.fail())
+        {
+            log("Open file fail");
+            return 1001;
+        }
+        
+        std::string str((std::istreambuf_iterator<char>(infile)),
+                        std::istreambuf_iterator<char>());
+        file = str.c_str();
+    }
     
     
     log("open file:\n----\n%s\n----", file.c_str());
@@ -117,9 +169,9 @@ int DownloadScene::ReadVer(const std::string file_name)
     for (auto iter = d.MemberBegin(); iter != d.MemberEnd(); iter++)
     {
         auto key = (iter->name).GetString();
-        log("key = %s", key);
+        log("key\t = %s", key);
         auto value = d[key].GetString();
-        log("value = %s", value);
+        log("value\t = %s", value);
     }
     
 //    auto ver_str = d["version"].GetString();

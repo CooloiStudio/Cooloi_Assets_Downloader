@@ -21,8 +21,8 @@ public:
     virtual bool init();
     
     
-    void Download();	//检查版本更新
-    int Reset();		//重置版本
+    void Download(const std::string url);
+    int Reset();		//重置
     
     virtual void onError(cocos2d::extension::AssetsManager::ErrorCode errorCode);		//错误信息
     virtual void onProgress(int percent);	//更新下载进度
@@ -35,6 +35,9 @@ private:
 public:
     
     int percent() {return percent_;}
+    
+    std::string path_to_save() { return path_to_save_; }
+    
     cocos2d::extension::AssetsManager::ErrorCode status() {return status_;}
     bool success() {return success_;}
     
@@ -48,6 +51,12 @@ protected:
     void set_percent(int percent) { percent_ = percent; }
     void set_status(const cocos2d::extension::AssetsManager::ErrorCode stauts) { status_ = stauts; }
     void set_success(bool is_success) {success_ = is_success;}
+    
+    const std::string def_pkg_url() { return def_pkg_url_; }
+    void set_def_pkg_url(std::string def_pkg_url) { def_pkg_url_ = def_pkg_url;}
+    
+    const std::string def_ver_url() { return def_ver_url_; }
+    void set_def_ver_url_(std::string def_ver_url) { def_ver_url_ = def_ver_url; }
 
 #pragma mark - Variable
 private:
@@ -56,6 +65,8 @@ private:
     cocos2d::extension::AssetsManager::ErrorCode status_;
     bool success_;
     
+    std::string def_pkg_url_;
+    std::string def_ver_url_;
     std::string package_url_;
     std::string version_url_;
 };

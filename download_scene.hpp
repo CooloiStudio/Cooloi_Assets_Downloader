@@ -22,6 +22,10 @@ public:
     
     virtual void update(float dt);
     
+    void DowanloadDone(float dt);
+    
+    int Download(const std::string pkg_url);
+    
     int ReadVer(const std::string file_name);
     
     int WriteVer(const std::string file_name);
@@ -32,9 +36,18 @@ public:
     CREATE_FUNC(DownloadScene);
     
     
+#pragma mark - Get&Set
+public:
+    bool dl_finished() { return dl_finished_; }
+    
+protected:
+    void set_dl_finished(bool dl_finished) { dl_finished_ = dl_finished; }
+    
 #pragma mark - Variable
 private:
     AssetsDownload *downloader_;
+    
+    bool dl_finished_;
 };
 
 #endif /* DownloadScene_hpp */
