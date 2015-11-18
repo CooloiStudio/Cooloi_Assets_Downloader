@@ -1,6 +1,12 @@
 #include "HelloWorldScene.h"
 
 #include "SimpleAudioEngine.h"
+#include "download_manager.hpp"
+
+#include <iostream>
+#include <string>
+#include <fstream>
+
 using namespace CocosDenshion;
 
 USING_NS_CC;
@@ -75,8 +81,12 @@ bool HelloWorld::init()
     // add the sprite as a child to this layer
     this->addChild(sprite, 0);
     
-    auto audio = SimpleAudioEngine::getInstance();
-    audio->playBackgroundMusic("east.mp3", true);
+//    auto audio = SimpleAudioEngine::getInstance();
+//    audio->playBackgroundMusic("east.mp3", true);
+    
+    auto downloader = new DownloadManager();
+    
+    downloader->Download("");
     
     return true;
 }

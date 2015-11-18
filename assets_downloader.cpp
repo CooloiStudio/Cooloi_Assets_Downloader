@@ -13,76 +13,104 @@
 #include <sys/stat.h>
 #endif
 
-
-const auto kDownloadPath = "download";	//下载后保存的文件夹名
-
-AssetsDownloader::AssetsDownloader():
-path_to_save_(""),
+AssetsDownloader::AssetsDownloader(const std::string def_pkg_url,
+                                   const std::string def_ver_url,
+                                   const std::string download_dir,
+                                   int max_retry):
+retry_(0),
+max_retry_(max_retry),
 percent_(0),
+dir_to_save_(download_dir),
+path_to_save_(""),
 status_(),
 downloading_(false),
-def_pkg_url_("https://github.com/CooloiStudio/Cooloi_Assets_Downloader/raw/master/config/update_list.zip"),
-def_ver_url_("http://turanga.deskxd.com/thanks/pubdate/"),
+def_pkg_url_(def_pkg_url),
+def_ver_url_(def_ver_url),
 package_url_(""),
-version_url_("")
+version_url_(def_ver_url)
 {
-    set_version_url(def_ver_url());
 }
 
 AssetsDownloader::~AssetsDownloader()
 {
-    AssetsManager* assetManager = GetAssetManager();
-    CC_SAFE_DELETE(assetManager);
+    AssetsManager* asset_manager = GetAssetManager();
+    CC_SAFE_DELETE(asset_manager);
 }
 
-bool AssetsDownloader::init()
+bool AssetsDownloader::Init()
 {
     InitDownloadDir();
     return true;
 }
 
-void AssetsDownloader::update(float delta)
-{
-    if (false == downloading())
-    {
-        
-    }
-}
-
-void AssetsDownloader::Download(const std::string url)
+int AssetsDownloader::Download(const std::string url)
 {
     set_downloading(true);
     set_mode(DownloadMode::kOnce);
-    set_package_url(url);
-    GetAssetManager()->update();
+    set_now_downloading(url);
+    return DoDownload(url);
 }
 
-int AssetsDownloader::DownloadMultiple(const std::map<std::string, std::string> pkg_vec)
+int AssetsDownloader::DownloadMultiple(const std::map<std::string, std::string> pkg_map)
 {
     set_downloading(true);
-    set_package_map(pkg_vec);
+    set_package_map(pkg_map);
     set_mode(DownloadMode::kList);
-    DownloadUnit();
-    return 0;
+    return DownloadUnit();
 }
 
 int AssetsDownloader::DownloadUnit()
 {
     if (!package_map().empty())
     {
+        
+        if (AssetsManager::ErrorCode::NETWORK == status())
+        {
+            DoDownload(package_map().at(now_downloading()));
+            return 0;
+        }
+        std::vector<std::string> finished;
         for (auto p : package_map())
         {
+            if(now_downloading() == p.first
+               ||
+               package_url() == package_map().at(p.first))
+            {
+                finished.push_back(p.first);
+                continue;
+            }
             set_now_downloading(p.first);
             break;
         }
-        set_package_url(package_map()[now_downloading()]);
-        package_map_.erase(package_map().begin());
-        GetAssetManager()->update();
+        for (auto f : finished)
+        {
+            package_map_.erase(f);
+        }
+        if (package_map().empty())
+        {
+            set_downloading(false);
+            return 0;
+        }
+        DoDownload(package_map().at(now_downloading()));
     }
     else
     {
         set_downloading(false);
     }
+    return 0;
+}
+
+int AssetsDownloader::DoDownload(const std::string url)
+{
+    log("Now downloading : %s", now_downloading().c_str());
+    
+    if (AssetsManager::ErrorCode::NETWORK != status())
+    {
+        set_retry(0);
+    }
+    set_package_url(url);
+    GetAssetManager()->update();
+    set_status(AssetsManager::ErrorCode::CREATE_FILE);
     return 0;
 }
 
@@ -114,6 +142,21 @@ int AssetsDownloader::Reset()
 void AssetsDownloader::onError(AssetsManager::ErrorCode errorCode)
 {
     set_status(errorCode);
+    log("Error on Downloading : %s\nError code : %d",
+        now_downloading().c_str(),
+        status());
+     if (errorCode == AssetsManager::ErrorCode::NETWORK)
+    {
+        if (max_retry() <= retry())
+        {
+            set_retry(0);
+            return;
+        }
+        log("Retry download");
+        set_retry(retry() + 1);
+        log("Retry : %d", retry());
+        DownloadUnit();
+    }
 }
 
 void AssetsDownloader::onProgress(int percent)
@@ -123,7 +166,8 @@ void AssetsDownloader::onProgress(int percent)
 
 void AssetsDownloader::onSuccess()
 {
-    log("Download success!");
+    log("Download finished with : %s", now_downloading().c_str());
+    set_now_downloading("");
     switch (mode())
     {
         case DownloadMode::kOnce:
@@ -145,7 +189,7 @@ void AssetsDownloader::onSuccess()
 
 AssetsManager* AssetsDownloader::GetAssetManager()
 {
-    static AssetsManager *assetManager = NULL;
+    static AssetsManager *asset_manager = NULL;
     
     //    set_version_url(def_ver_url());
     if ("" == package_url())
@@ -153,22 +197,27 @@ AssetsManager* AssetsDownloader::GetAssetManager()
         set_package_url(def_pkg_url());
     }
     
-    if (!assetManager)
+    if (asset_manager)
     {
-        assetManager = new AssetsManager(package_url_.c_str(),
-                                         version_url_.c_str(),
-                                         path_to_save_.c_str());
-        assetManager->setDelegate(this);
-        assetManager->setConnectionTimeout(3);
+        asset_manager->setPackageUrl(package_url().c_str());
     }
-    return assetManager;
+    
+    if (!asset_manager)
+    {
+        asset_manager = new AssetsManager(package_url_.c_str(),
+                                          version_url_.c_str(),
+                                          path_to_save_.c_str());
+        asset_manager->setDelegate(this);
+        asset_manager->setConnectionTimeout(3);
+    }
+    return asset_manager;
 }
 
 void AssetsDownloader::InitDownloadDir()
 {
     log("InitDownloadDir");
     path_to_save_ = FileUtils::getInstance()->getWritablePath();
-    path_to_save_ += kDownloadPath;
+    path_to_save_ += dir_to_save_;
     log("Path: %s", path_to_save_.c_str());
 #if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
     DIR *pDir = NULL;
