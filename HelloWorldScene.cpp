@@ -86,7 +86,7 @@ bool HelloWorld::init()
     
     auto downloader = new DownloadManager();
     
-    downloader->Download("");
+    downloader->init();
     
     return true;
 }

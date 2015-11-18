@@ -47,6 +47,7 @@ bool DownloadManager::init()
     //    ReadVer("update_list.json");
     //    ReadVer("update_list_b.json");
     
+    Download("https://github.com/CooloiStudio/Cooloi_Assets_Downloader/raw/master/config/update_list_b.zip");
     
     //    WriteVer("update_list.json");
     
@@ -55,13 +56,13 @@ bool DownloadManager::init()
     return true;
 }
 
-void DownloadManager::DowanloadDone(float dt)
+void DownloadManager::update(float dt)
 {
-    log("%d", downloader_->status());
+    log("-%d-", downloader_->status());
     if (!downloader_->downloading())
     {
-        auto schedu = Director::getInstance()->getScheduler();
-        schedu->unschedule("ca", this);
+        unscheduleUpdate();
+//        schedu->unschedule("ca", this);
         
         ReadVer("update_list.json");
         ReadVer("update_list_b.json");
@@ -84,20 +85,12 @@ void DownloadManager::DowanloadDone(float dt)
 
 int DownloadManager::Download(const std::string pkg_url)
 {
-    
     std::map<std::string, std::string> pkg_map;
     pkg_map["b"] = "https://github.com/CooloiStudio/Cooloi_Assets_Downloader/raw/master/config/update_list_b.zip";
     pkg_map["a"] = "https://github.com/CooloiStudio/Cooloi_Assets_Downloader/raw/master/config/update_list.zip";
-    downloader_->DownloadMultiple(pkg_map);
+    downloader_->Download(pkg_url);
     
-    auto schedu = Director::getInstance()->getScheduler();
-    schedu->schedule(CC_CALLBACK_1(DownloadManager::DowanloadDone, this), //回调
-                     this, //当前对象
-                     0.5, //重复调用时间(s)
-                     CC_REPEAT_FOREVER, //重复次数
-                     0, //延迟调用时间(s)
-                     true, //是否暂停等待
-                     "ca"); //key
+    scheduleUpdate();
     
     return 0;
 }

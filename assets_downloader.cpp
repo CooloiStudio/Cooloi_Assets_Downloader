@@ -8,6 +8,8 @@
 
 #include "assets_downloader.hpp"
 
+#include <iostream>
+
 #if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32)
 #include <dirent.h>
 #include <sys/stat.h>
@@ -27,7 +29,8 @@ downloading_(false),
 def_pkg_url_(def_pkg_url),
 def_ver_url_(def_ver_url),
 package_url_(""),
-version_url_(def_ver_url)
+version_url_(def_ver_url),
+now_downloading_("")
 {
 }
 
@@ -46,63 +49,14 @@ bool AssetsDownloader::Init()
 int AssetsDownloader::Download(const std::string url)
 {
     set_downloading(true);
-    set_mode(DownloadMode::kOnce);
+    set_retry(0);
     set_now_downloading(url);
     return DoDownload(url);
 }
 
-int AssetsDownloader::DownloadMultiple(const std::map<std::string, std::string> pkg_map)
-{
-    set_downloading(true);
-    set_package_map(pkg_map);
-    set_mode(DownloadMode::kList);
-    return DownloadUnit();
-}
-
-int AssetsDownloader::DownloadUnit()
-{
-    if (!package_map().empty())
-    {
-        
-        if (AssetsManager::ErrorCode::NETWORK == status())
-        {
-            DoDownload(package_map().at(now_downloading()));
-            return 0;
-        }
-        std::vector<std::string> finished;
-        for (auto p : package_map())
-        {
-            if(now_downloading() == p.first
-               ||
-               package_url() == package_map().at(p.first))
-            {
-                finished.push_back(p.first);
-                continue;
-            }
-            set_now_downloading(p.first);
-            break;
-        }
-        for (auto f : finished)
-        {
-            package_map_.erase(f);
-        }
-        if (package_map().empty())
-        {
-            set_downloading(false);
-            return 0;
-        }
-        DoDownload(package_map().at(now_downloading()));
-    }
-    else
-    {
-        set_downloading(false);
-    }
-    return 0;
-}
-
 int AssetsDownloader::DoDownload(const std::string url)
 {
-    log("Now downloading : %s", now_downloading().c_str());
+//    log("Now downloading : %s", now_downloading().c_str());
     
     if (AssetsManager::ErrorCode::NETWORK != status())
     {
@@ -145,17 +99,14 @@ void AssetsDownloader::onError(AssetsManager::ErrorCode errorCode)
     log("Error on Downloading : %s\nError code : %d",
         now_downloading().c_str(),
         status());
-     if (errorCode == AssetsManager::ErrorCode::NETWORK)
-    {
-        if (max_retry() <= retry())
-        {
-            set_retry(0);
-            return;
-        }
+     if (errorCode == AssetsManager::ErrorCode::NETWORK
+         &&
+         max_retry() > retry())
+    {   
         log("Retry download");
         set_retry(retry() + 1);
         log("Retry : %d", retry());
-        DownloadUnit();
+        DoDownload(package_url());
     }
 }
 
@@ -168,23 +119,7 @@ void AssetsDownloader::onSuccess()
 {
     log("Download finished with : %s", now_downloading().c_str());
     set_now_downloading("");
-    switch (mode())
-    {
-        case DownloadMode::kOnce:
-        {
-            set_downloading(false);
-        }
-            break;
-            
-        case DownloadMode::kList:
-        {
-            DownloadUnit();
-        }
-            break;
-            
-        default:
-            break;
-    }
+    set_downloading(false);
 }
 
 AssetsManager* AssetsDownloader::GetAssetManager()

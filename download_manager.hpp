@@ -14,7 +14,7 @@
 class AssetsDownload;
 class AssetsDownloader;
 
-class DownloadManager
+class DownloadManager : public cocos2d::Node
 {
 public:
     ///
@@ -30,7 +30,7 @@ public:
     
     virtual bool init();
     
-    void DowanloadDone(float dt);
+    void update(float dt);
     
     int Download(const std::string pkg_url);
     

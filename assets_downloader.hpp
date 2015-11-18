@@ -15,13 +15,6 @@
 using namespace cocos2d;
 using namespace cocos2d::extension;
 
-enum class DownloadMode
-{
-    kNull = 0,
-    kOnce = 1,
-    kList = 2
-};
-
 class AssetsDownloader : public AssetsManagerDelegateProtocol
 {
 public:
@@ -52,24 +45,14 @@ public:
     ///
     int Download(const std::string url);
     
-    ///
-    /// \brief 多资源下载
-    ///
-    /// \param pkg_map std::map<资源名, 资源url>
-    ///
-    /// \return 0
-    ///
-    int DownloadMultiple(const std::map<std::string, std::string> pkg_map);
-    
-    int DownloadLog();
     
     int Reset();
     
     virtual void onError(AssetsManager::ErrorCode errorCode);
     virtual void onProgress(int percent);
     virtual void onSuccess();
+    
 private:
-    int DownloadUnit();
     int DoDownload(const std::string url);
     AssetsManager* GetAssetManager();
     void InitDownloadDir();
@@ -84,9 +67,6 @@ public:
     AssetsManager::ErrorCode status() {return status_;}
     
     bool downloading() { return downloading_; }
-    
-    DownloadMode mode() { return mode_; }
-    void set_mode(DownloadMode mode) { mode_ = mode; }
     
     const std::string package_url() { return package_url_; }
     void set_package_url(std::string package_url) { package_url_ = package_url; }
@@ -131,7 +111,6 @@ private:
     std::string path_to_save_;
     AssetsManager::ErrorCode status_;
     bool downloading_;
-    DownloadMode mode_;
     
     std::string def_pkg_url_;
     std::string def_ver_url_;
