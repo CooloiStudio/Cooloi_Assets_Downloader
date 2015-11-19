@@ -14,8 +14,19 @@
 class AssetsDownload;
 class AssetsDownloader;
 
+enum class DownloadStage
+{
+    kNull = 0,
+    kLoadConfig = 1,
+    kInitDownloader = 2,
+    kDownloadUpdate = 3,
+    kCheckUpdate = 4,
+    kFinished = 5
+};
+
 class DownloadManager : public cocos2d::Scene
 {
+#pragma mark - Initialization
 public:
     ///
     /// \brief 构造函数
@@ -33,29 +44,61 @@ public:
     
     virtual void update(float dt);
     
-    int ReadConf(std::map<std::string, std::string> &conf_map);
-    int ConfRegex(const std::string str,
-                 std::string &arg,
-                 std::string &value);
+#pragma mark - Member Function
     
-    int Download(const std::string pkg_url);
-    
-    int ReadVer(const std::string file_name);
-    
-    int WriteVer(const std::string file_name);
-    
+#pragma mark -stage
+public:
+    int LoadConfig();
+    int InitDownloader();
+    int DownloadUpdate();
+    int CheckUpdate();
+
     void Close();
     
+#pragma mark -other
+private:
+    int Download(const std::string pkg_url);
+    
+    int ReadConf(const std::string file_name,
+                 std::map<std::string, std::string> &conf_map);
+    int ConfRegex(const std::string str,
+                  std::string &arg,
+                  std::string &value);
+    
+    int ReadFile(const std::string file_name,
+                 std::string &content);
+    
+    int WriteFile(const std::string file_name,
+                  const std::string content);
+    
+    int AppendFile(const std::string file_name,
+                   const std::string content);
     
 #pragma mark - Get&Set
 public:
     AssetsDownloader* const downloader() { return downloader_; }
     
 protected:
+    void set_downloader(AssetsDownloader* downloader) { downloader_ = downloader; }
+    
+    DownloadStage stage() { return stage_; }
+    void set_stage(DownloadStage stage) { stage_ = stage; }
+    
+    std::map<std::string, std::string> conf() { return conf_; }
+    void push_conf(std::string key, std::string value)
+    { conf_[key] = value; }
+    
+    std::vector<std::string> finished() { return finished_; }
+    void push_finished(std::string finished)
+    { finished_.push_back(finished); }
     
 #pragma mark - Variable
 private:
     AssetsDownloader *downloader_;
+    DownloadStage stage_;
+    
+    std::map<std::string, std::string> conf_;
+    std::vector<std::string> finished_;
 };
 
 #endif /* download_manager_hpp */
