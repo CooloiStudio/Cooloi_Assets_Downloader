@@ -89,12 +89,6 @@ protected:
     
     void set_downloading(bool is_downloading) {downloading_ = is_downloading;}
     
-    const std::string def_pkg_url() { return def_pkg_url_; }
-    void set_def_pkg_url(std::string def_pkg_url) { def_pkg_url_ = def_pkg_url;}
-    
-    const std::string def_ver_url() { return def_ver_url_; }
-    void set_def_ver_url(std::string def_ver_url) { def_ver_url_ = def_ver_url; }
-    
     void set_now_downloading(std::string now_downloading)
     { now_downloading_ = now_downloading; }
     
@@ -112,8 +106,6 @@ private:
     AssetsManager::ErrorCode status_;
     bool downloading_;
     
-    std::string def_pkg_url_;
-    std::string def_ver_url_;
     std::string package_url_;
     std::string version_url_;
     

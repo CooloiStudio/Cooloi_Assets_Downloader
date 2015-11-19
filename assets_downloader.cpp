@@ -26,9 +26,7 @@ dir_to_save_(download_dir),
 path_to_save_(""),
 status_(),
 downloading_(false),
-def_pkg_url_(def_pkg_url),
-def_ver_url_(def_ver_url),
-package_url_(""),
+package_url_(def_pkg_url),
 version_url_(def_ver_url),
 now_downloading_("")
 {
@@ -99,15 +97,30 @@ void AssetsDownloader::onError(AssetsManager::ErrorCode errorCode)
     log("Error on Downloading : %s\nError code : %d",
         now_downloading().c_str(),
         status());
-     if (errorCode == AssetsManager::ErrorCode::NETWORK
-         &&
-         max_retry() > retry())
-    {   
-        log("Retry download");
-        set_retry(retry() + 1);
-        log("Retry : %d", retry());
-        DoDownload(package_url());
+    switch (status())
+    {
+        case AssetsManager::ErrorCode::NETWORK:
+        {
+            if (max_retry() > retry())
+            {
+                log("Retry download");
+                set_retry(retry() + 1);
+                log("Retry : %d", retry());
+                DoDownload(package_url());
+            }
+            else
+            {
+                set_downloading(false);
+            }
+        }
+            break;
+            
+        default:
+            set_downloading(false);
+            break;
     }
+    
+    
 }
 
 void AssetsDownloader::onProgress(int percent)
@@ -125,12 +138,6 @@ void AssetsDownloader::onSuccess()
 AssetsManager* AssetsDownloader::GetAssetManager()
 {
     static AssetsManager *asset_manager = NULL;
-    
-    //    set_version_url(def_ver_url());
-    if ("" == package_url())
-    {
-        set_package_url(def_pkg_url());
-    }
     
     if (asset_manager)
     {

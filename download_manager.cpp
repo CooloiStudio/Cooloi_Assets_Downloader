@@ -9,9 +9,12 @@
 #include "download_manager.hpp"
 #include "assets_downloader.hpp"
 
+#include "SimpleAudioEngine.h"
+
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <regex>
 
 #include "json/rapidjson.h"
 #include "json/document.h"
@@ -19,15 +22,11 @@
 #include "json/writer.h"
 
 using namespace cocos2d;
+using namespace CocosDenshion;
 
 DownloadManager::DownloadManager():
 downloader_()
 {
-    downloader_ = new AssetsDownloader("https://github.com/CooloiStudio/Cooloi_Assets_Downloader/raw/master/config/update_list.zip",
-                                       "http://turanga.deskxd.com/thanks/pubdate/",
-                                       "download",
-                                       10);
-    downloader_->Init();
 }
 
 DownloadManager::~DownloadManager()
@@ -40,14 +39,26 @@ DownloadManager::~DownloadManager()
 // on "init" you need to initialize your instance
 bool DownloadManager::init()
 {
+    if ( !Scene::init() )
+    {
+        return false;
+    }
+    
     //    downloader_ = new AssetsDownload();
     //    downloader_->init();
     //    Download("");
     
     //    ReadVer("update_list.json");
     //    ReadVer("update_list_b.json");
+    std::map<std::string, std::string> conf_map;
+    ReadConf(conf_map);
+    downloader_ = new AssetsDownloader(conf_map["URL"],
+                                       conf_map["VER"],
+                                       conf_map["DIR"],
+                                       std::stoi(conf_map["TRY"]));
+    downloader_->Init();
     
-    Download("https://github.com/CooloiStudio/Cooloi_Assets_Downloader/raw/master/config/update_list_b.zip");
+    Download("http://www.deskxd.org:8086/Archive.zip");
     
     //    WriteVer("update_list.json");
     
@@ -56,25 +67,41 @@ bool DownloadManager::init()
     return true;
 }
 
+DownloadManager* DownloadManager::Create()
+{
+    auto d = new DownloadManager();
+    if(d->init())
+        return d;
+    CC_SAFE_DELETE(d);
+    return nullptr;
+}
+
 void DownloadManager::update(float dt)
 {
-    log("-%d-", downloader_->status());
     if (!downloader_->downloading())
     {
         unscheduleUpdate();
 //        schedu->unschedule("ca", this);
         
-        ReadVer("update_list.json");
-        ReadVer("update_list_b.json");
+//        ReadVer("update_list.json");
+//        ReadVer("update_list_b.json");
         
         
         
+        auto path = FileUtils::getInstance()->fullPathForFilename("east.mp3");
+        log("%s", path.c_str());
+        auto audio = SimpleAudioEngine::getInstance();
+        audio->playBackgroundMusic("east.mp3", true);
         
-        auto file_name_in_app = FileUtils::getInstance()->fullPathForFilename("upload_list_b.json");
+//        sleep(10);
+        auto file_with_path = FileUtils::getInstance()->fullPathForFilename("AnimationLoading.json");
         
-        log("Full path: %s", file_name_in_app.c_str());
+        log("Full path: %s", file_with_path.c_str());
         
-        std::ifstream infile(file_name_in_app);
+        if ("" == file_with_path)
+            return;
+        
+        std::ifstream infile(file_with_path);
         std::string str_by_line = "";
         while (std::getline(infile, str_by_line))
         {
@@ -83,11 +110,47 @@ void DownloadManager::update(float dt)
     }
 }
 
+int DownloadManager::ReadConf(std::map<std::string, std::string> &conf_map)
+{
+    auto config = FileUtils::getInstance()->fullPathForFilename("Cooloi_ASDL.conf");
+    std::ifstream in_file(config);
+    
+    
+    std::string str_by_line = "";
+    while (std::getline(in_file, str_by_line))
+    {
+        std::string arg;
+        std::string value;
+        ConfRegex(str_by_line, arg, value);
+        conf_map[arg] = value;
+    }
+    return 0;
+}
+
+int DownloadManager::ConfRegex(const std::string str,
+                              std::string &arg,
+                              std::string &value)
+{
+    std::regex rgx("(\\w+)\\=([^\\s]+)");
+    std:: smatch match;
+    
+    if (std::regex_search(str.begin(), str.end(), match, rgx))
+    {
+        for(auto q : match)
+        {
+            log("%s", q.str().c_str());
+        }
+        arg = match[1].str();
+        value = match[2].str();
+    }
+    return 0;
+}
+
 int DownloadManager::Download(const std::string pkg_url)
 {
     std::map<std::string, std::string> pkg_map;
-    pkg_map["b"] = "https://github.com/CooloiStudio/Cooloi_Assets_Downloader/raw/master/config/update_list_b.zip";
-    pkg_map["a"] = "https://github.com/CooloiStudio/Cooloi_Assets_Downloader/raw/master/config/update_list.zip";
+    pkg_map["b"] = "http://www.deskxd.org:8086/update_list_b.zip";
+    pkg_map["a"] = "http://www.deskxd.org:8086/update_list.zip";
     downloader_->Download(pkg_url);
     
     scheduleUpdate();
@@ -98,11 +161,11 @@ int DownloadManager::Download(const std::string pkg_url)
 int DownloadManager::ReadVer(const std::string file_name)
 {
     //    log("File name: %s", file_name.c_str());
-    auto file_name_in_app = FileUtils::getInstance()->fullPathForFilename(file_name);
+    auto file_with_path = FileUtils::getInstance()->fullPathForFilename(file_name);
     
-    log("Full path: %s", file_name_in_app.c_str());
+    log("Full path: %s", file_with_path.c_str());
     
-    auto file = FileUtils::getInstance()->getStringFromFile(file_name_in_app);
+    auto file = FileUtils::getInstance()->getStringFromFile(file_with_path);
     //    auto file_content = file.c_str();
     
     if ("" == file)

@@ -14,7 +14,7 @@
 class AssetsDownload;
 class AssetsDownloader;
 
-class DownloadManager : public cocos2d::Node
+class DownloadManager : public cocos2d::Scene
 {
 public:
     ///
@@ -29,8 +29,14 @@ public:
     ~DownloadManager();
     
     virtual bool init();
+    static DownloadManager* Create();
     
-    void update(float dt);
+    virtual void update(float dt);
+    
+    int ReadConf(std::map<std::string, std::string> &conf_map);
+    int ConfRegex(const std::string str,
+                 std::string &arg,
+                 std::string &value);
     
     int Download(const std::string pkg_url);
     
@@ -44,7 +50,6 @@ public:
 #pragma mark - Get&Set
 public:
     AssetsDownloader* const downloader() { return downloader_; }
-    
     
 protected:
     
