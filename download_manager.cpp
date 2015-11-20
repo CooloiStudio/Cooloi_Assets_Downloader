@@ -153,19 +153,22 @@ int DownloadManager::CheckUpdate()
         }
     }
     
-    GetUpdate();
+    if (!update().empty())
+    {
+        log("New package find!");
+        GetUpdate();
+    }
     return ret;
 } // CheckUpdate
 
 int DownloadManager::GetUpdate()
 {
+    log("\nStage : Get update package.\n");
     set_stage(DownloadStage::kGetUpdate);
     auto ret = 0;
     if ("" != now_downloading_) push_finished(now_downloading());
     std::map<std::string, std::string> pkg_map;
     ret = ReadConf(conf_["NAME"], pkg_map);
-    std::map<std::string, std::string> loc_map;
-    ret = ReadConf(conf_["LOCAL_NAME"], loc_map);
     
     for (auto u : update())
     {
@@ -186,7 +189,18 @@ int DownloadManager::GetUpdate()
     }
     
     if (update().size() == finished().size())
-        log("over");
+    {
+        std::string content = "#loacl list\n";
+        for (auto p : pkg_map)
+        {
+            content += (p.first + " = " + p.second + "\n");
+        }
+        WriteFile(conf_["LOCAL_NAME"], content);
+        auto s = FileUtils::getInstance()->getStringFromFile(conf_["LOCAL_NAME"]);
+        log("%s", s.c_str());
+    }
+    
+    
     
     return 0;
 } // GetUpdate
@@ -216,14 +230,15 @@ int DownloadManager::ReadConf(const std::string file_name,
                               std::map<std::string, std::string> &conf_map)
 {
     log("Read config file : %s", file_name.c_str());
-    auto config = FileUtils::getInstance()->fullPathForFilename(file_name);
-    
-    while ("" == config)
+    std::string path_with_file = "";
+    FindPathWithFile(file_name, path_with_file);
+    if ("" == path_with_file)
     {
         WriteFile(file_name, "");
-        return 0;
+        return 1;
     }
-    std::ifstream in_file(config);
+    
+    std::ifstream in_file(path_with_file);
     
     std::string str_by_line = "";
     while (std::getline(in_file, str_by_line))
@@ -260,9 +275,9 @@ int DownloadManager::ReadFile(const std::string file_name,
                               std::string &content)
 {
     log("Preparing Read file : %s", file_name.c_str());
-    auto file_with_path = FileUtils::getInstance()->fullPathForFilename(file_name);
-    
-    if ("" == file_name)
+    std::string file_with_path = "";
+    FindPathWithFile(file_name, file_with_path);
+    if ("" == file_with_path)
         return 1404;
     
     log("Full path: %s", file_with_path.c_str());
@@ -270,7 +285,6 @@ int DownloadManager::ReadFile(const std::string file_name,
     
     if ("" == file)
     {
-        log("Full path: %s", file_with_path.c_str());
         std::ifstream infile(file_with_path);
         
         if (infile.fail())
@@ -294,7 +308,10 @@ int DownloadManager::WriteFile(const std::string file_name,
                                const std::string content)
 {
     log("Preparing write file : %s", file_name.c_str());
-    auto file_to_write = FileUtils::getInstance()->getWritablePath() + file_name;
+    std::string file_to_write;
+    FindPathWithFile(file_name, file_to_write);
+    if ("" == file_to_write)
+        file_to_write = FileUtils::getInstance()->getWritablePath() + file_name;
     
     log("Write path : %s", file_to_write.c_str());
     std::ofstream outfile;
@@ -308,27 +325,6 @@ int DownloadManager::WriteFile(const std::string file_name,
     outfile << str;
     log("write file with fstream : \n----\n%s\n----", str.c_str());
     outfile.close();
-    
-//    FILE* file = fopen(file_to_write.c_str(), "wb");
-//    if (file)
-//    {
-//        fputs(str.c_str(), file);
-//        fclose(file);
-//        log("write file with fputs : \n----\n%s\n----", str.c_str());
-//    }
-    auto tn = FileUtils::getInstance()->getWritablePath() + "test.conf";
-    FILE* file = fopen(tn.c_str(), "a");
-    if (file)
-    {
-        fputs(str.c_str(), file);
-        fclose(file);
-        log("write file with fputs : \n----\n%s\n----", str.c_str());
-    }
-    
-    auto a = FileUtils::getInstance()->fullPathForFilename("test.conf");
-    log("%s", a.c_str());
-    
-//    ReadFile(file_name, str);
     return 0;
 } // WriteFile
 
@@ -336,8 +332,14 @@ int DownloadManager::AppendFile(const std::string file_name,
                                 const std::string content)
 {
     auto ret = 0;
-    auto file = FileUtils::getInstance()->fullPathForFilename(file_name);
-    log("Full path: %s", file.c_str());
+    std::string path_with_file = "";
+    FindPathWithFile(file_name, path_with_file);
+    
+    if ("" == path_with_file)
+    {
+        return 1404;
+    }
+    log("Full path: %s", path_with_file.c_str());
     
     std::string front_content = "";
     ret = ReadFile(file_name,
@@ -348,3 +350,19 @@ int DownloadManager::AppendFile(const std::string file_name,
     ret = WriteFile(file_name, front_content + "\n" + content);
     return ret;
 } // AppendFile
+
+int DownloadManager::FindPathWithFile(const std::string file_name,
+                                      std::string &path_with_file)
+{
+    auto path = FileUtils::getInstance()->fullPathForFilename(file_name);
+    if ("" == path)
+    {
+        auto temp_name = FileUtils::getInstance()->getWritablePath() + file_name;
+        path = FileUtils::getInstance()->fullPathForFilename(temp_name);
+        if ("" == path) log("File not exist!");
+    }
+    if ("" != path);
+        log("Find file with : %s", path.c_str());
+    path_with_file = path;
+    return 0;
+} // FindPathWithFile

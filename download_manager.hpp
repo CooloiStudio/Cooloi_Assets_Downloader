@@ -76,6 +76,9 @@ private:
     int AppendFile(const std::string file_name,
                    const std::string content);
     
+    int FindPathWithFile(const std::string file_name,
+                         std::string &path_with_file);
+    
 #pragma mark - Get&Set
 public:
     AssetsDownloader* const downloader() { return downloader_; }
