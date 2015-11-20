@@ -91,6 +91,13 @@ int AssetsDownloader::Reset()
     return 0;
 }
 
+int AssetsDownloader::Delet()
+{
+    auto asset_manager = GetAssetManager();
+    CC_SAFE_DELETE(asset_manager);
+    return 0;
+}
+
 void AssetsDownloader::onError(AssetsManager::ErrorCode errorCode)
 {
     set_status(errorCode);

@@ -15,11 +15,7 @@
 #include <string>
 #include <fstream>
 #include <regex>
-
-#include "json/rapidjson.h"
-#include "json/document.h"
-#include "json/stringbuffer.h"
-#include "json/writer.h"
+#include <stdio.h>
 
 using namespace cocos2d;
 using namespace CocosDenshion;
@@ -29,15 +25,16 @@ DownloadManager::DownloadManager():
 downloader_(nullptr),
 stage_(DownloadStage ::kNull),
 conf_(),
-finished_()
+finished_(),
+now_downloading_("")
 {
-}
+} // DownloadManager
 
 DownloadManager::~DownloadManager()
 {
     if (downloader_)
         CC_SAFE_DELETE(downloader_);
-}
+} // ~DownloadManager
 
 
 // on "init" you need to initialize your instance
@@ -48,38 +45,14 @@ bool DownloadManager::init()
         return false;
     }
     
-    Size visibleSize = Director::getInstance()->getVisibleSize();
-    Vec2 origin = Director::getInstance()->getVisibleOrigin();
-    
-    auto label = Label::createWithSystemFont("", "Arail", 30);
-    
-    std::string label_str = "This is ";
-    
-#if COCOS2D_DEBUG
-    label_str += "debug";
-#else
-    label_str += "release";
-#endif
-    
-    label->setString(label_str);
-    label->setPosition(Vec2(origin.x + visibleSize.width - label->getContentSize().width/2,
-                            origin.y + label->getContentSize().height/2));
-    addChild(label);
-    
-    //    downloader_ = new AssetsDownload();
-    //    downloader_->init();
-    //    Download("");
-    
-    //    ReadVer("update_list.json");
-    //    ReadVer("update_list_b.json");
-    
+    LoadConfig();
     
     InitDownloader();
     
-    DownloadUpdate();
+    LoadUpdate();
     
     return true;
-}
+} // init
 
 DownloadManager* DownloadManager::Create()
 {
@@ -88,7 +61,7 @@ DownloadManager* DownloadManager::Create()
         return d;
     CC_SAFE_DELETE(d);
     return nullptr;
-}
+} // Create
 
 void DownloadManager::update(float dt)
 {
@@ -96,56 +69,39 @@ void DownloadManager::update(float dt)
     
     unscheduleUpdate();
     
-    switch (stage_)
+    if (AssetsManager::ErrorCode::CREATE_FILE != downloader()->status())
+        return;
+    
+    switch (stage())
     {
-        case DownloadStage ::kDownloadUpdate:
+        case DownloadStage ::kLoadUpdate:
         {
             CheckUpdate();
         }
             break;
             
-        case DownloadStage ::kCheckUpdate:
+        case DownloadStage ::kGetUpdate:
         {
-            CheckUpdate();
+            GetUpdate();
         }
             break;
             
         default:
             break;
     }
-    
-    auto path = FileUtils::getInstance()->fullPathForFilename("east.mp3");
-    log("%s", path.c_str());
-    auto audio = SimpleAudioEngine::getInstance();
-    audio->playBackgroundMusic("east.mp3", true);
-    
-    sleep(10);
-    auto file_with_path = FileUtils::getInstance()->fullPathForFilename("AnimationLoading.json");
-    
-    log("Full path: %s", file_with_path.c_str());
-    
-    if ("" == file_with_path)
-        return;
-    
-    std::ifstream infile(file_with_path);
-    std::string str_by_line = "";
-    while (std::getline(infile, str_by_line))
-    {
-        log("%s", str_by_line.c_str());
-    }
-}
+} // update
 
 #pragma mark - Member Function
 #pragma mark -stage
 
 int DownloadManager::LoadConfig()
 {
-    log("Stage : Load config info.");
+    log("\nStage : Load config info.\n");
     set_stage(DownloadStage::kLoadConfig);
     auto ret = 0;
     std::string file_name = "";
 #if COCOS2D_DEBUG
-    file_name = "Cooloi_ASDL.conf";
+    file_name = "Cooloi_ASDL_DEBUG.conf";
 #else
     file_name = "Cooloi_ASDL.conf";
 #endif
@@ -156,11 +112,11 @@ int DownloadManager::LoadConfig()
         set_stage(DownloadStage::kNull);
     }
     return ret;
-}
+} // LoadConfig
 
 int DownloadManager::InitDownloader()
 {
-    log("Stage : Initialization Downloader.");
+    log("\nStage : Initialization Downloader.\n");
     set_stage(DownloadStage::kInitDownloader);
     downloader_ = new AssetsDownloader(conf_["URL"],
                                        conf_["VER"],
@@ -168,42 +124,72 @@ int DownloadManager::InitDownloader()
                                        std::stoi(conf_["TRY"]));
     downloader_->Init();
     return 0;
-}
+} // InitDownloader
 
-int DownloadManager::DownloadUpdate()
+int DownloadManager::LoadUpdate()
 {
-    log("Stage : Download update info.");
-    set_stage(DownloadStage::kDownloadUpdate);
+    log("\nStage : Download update info.\n");
+    set_stage(DownloadStage::kLoadUpdate);
     Download(conf_["URL"]);
     return 0;
-}
+} // LoadUpdate
 
 int DownloadManager::CheckUpdate()
 {
-    log("Stage : Check update info.");
+    log("\nStage : Check update info.\n");
     set_stage(DownloadStage::kCheckUpdate);
     auto ret = 0;
+    if ("" != now_downloading_) push_finished(now_downloading());
     std::map<std::string, std::string> pkg_map;
     ret = ReadConf(conf_["NAME"], pkg_map);
     std::map<std::string, std::string> loc_map;
     ret = ReadConf(conf_["LOCAL_NAME"], loc_map);
     
-    for (auto n : pkg_map)
+    for (auto p : pkg_map)
     {
-        auto iter = std::find(finished().begin(),
-                              finished().end(),
-                              n.first);
-        if (iter != finished().end())
-            continue;
-        if (n.second != loc_map[n.first])
+        if (p.second != loc_map[p.first])
         {
-            Download(conf_["SER"] + n.second);
-            break;
+            push_update(p.first);
         }
     }
-    set_stage(DownloadStage::kFinished);
+    
+    GetUpdate();
     return ret;
-}
+} // CheckUpdate
+
+int DownloadManager::GetUpdate()
+{
+    set_stage(DownloadStage::kGetUpdate);
+    auto ret = 0;
+    if ("" != now_downloading_) push_finished(now_downloading());
+    std::map<std::string, std::string> pkg_map;
+    ret = ReadConf(conf_["NAME"], pkg_map);
+    std::map<std::string, std::string> loc_map;
+    ret = ReadConf(conf_["LOCAL_NAME"], loc_map);
+    
+    for (auto u : update())
+    {
+        auto jump = false;
+        for (auto f : finished())
+        {
+            if (u == f)
+            {
+                jump = true;
+                break;
+            }
+        }
+        if (jump) continue;
+        
+        set_now_downloading(u);
+        Download(conf().at("SER") + pkg_map[u]);
+        break;
+    }
+    
+    if (update().size() == finished().size())
+        log("over");
+    
+    return 0;
+} // GetUpdate
 
 void DownloadManager::Close()
 {
@@ -212,7 +198,7 @@ void DownloadManager::Close()
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
     exit(0);
 #endif
-}
+} // Close
 
 
 #pragma mark -other
@@ -224,11 +210,12 @@ int DownloadManager::Download(const std::string pkg_url)
     
     scheduleUpdate();
     return 0;
-}
+} // Download
 
 int DownloadManager::ReadConf(const std::string file_name,
                               std::map<std::string, std::string> &conf_map)
 {
+    log("Read config file : %s", file_name.c_str());
     auto config = FileUtils::getInstance()->fullPathForFilename(file_name);
     
     while ("" == config)
@@ -237,7 +224,6 @@ int DownloadManager::ReadConf(const std::string file_name,
         return 0;
     }
     std::ifstream in_file(config);
-    
     
     std::string str_by_line = "";
     while (std::getline(in_file, str_by_line))
@@ -248,7 +234,7 @@ int DownloadManager::ReadConf(const std::string file_name,
         conf_map[arg] = value;
     }
     return 0;
-}
+} // ReadConf
 
 int DownloadManager::ConfRegex(const std::string str,
                                std::string &arg,
@@ -267,12 +253,13 @@ int DownloadManager::ConfRegex(const std::string str,
         value = match[2].str();
     }
     return 0;
-}
+} // ConfRegex
 
 
 int DownloadManager::ReadFile(const std::string file_name,
                               std::string &content)
 {
+    log("Preparing Read file : %s", file_name.c_str());
     auto file_with_path = FileUtils::getInstance()->fullPathForFilename(file_name);
     
     if ("" == file_name)
@@ -288,7 +275,7 @@ int DownloadManager::ReadFile(const std::string file_name,
         
         if (infile.fail())
         {
-            log("Open file fail");
+            log("Open file fail, file name: %s", file_name.c_str());
             return 1001;
         }
         
@@ -301,26 +288,49 @@ int DownloadManager::ReadFile(const std::string file_name,
     log("open file:\n----\n%s\n----", file.c_str());
     content = file;
     return 0;
-}
+} // ReadFile
 
 int DownloadManager::WriteFile(const std::string file_name,
                                const std::string content)
 {
+    log("Preparing write file : %s", file_name.c_str());
     auto file_to_write = FileUtils::getInstance()->getWritablePath() + file_name;
+    
+    log("Write path : %s", file_to_write.c_str());
     std::ofstream outfile;
     outfile.open(file_to_write);
     if (outfile.fail())
     {
-        log("Open file %s fail!", file_name.c_str());
+        log("Open file fail, file name: %s", file_name.c_str());
         return 1001;
     }
-    log("write file:\n----\n%s\n----", content.c_str());
-    
-    outfile << content;
+    std::string str = "#" + file_name + "\n" + content;
+    outfile << str;
+    log("write file with fstream : \n----\n%s\n----", str.c_str());
     outfile.close();
     
+//    FILE* file = fopen(file_to_write.c_str(), "wb");
+//    if (file)
+//    {
+//        fputs(str.c_str(), file);
+//        fclose(file);
+//        log("write file with fputs : \n----\n%s\n----", str.c_str());
+//    }
+    auto tn = FileUtils::getInstance()->getWritablePath() + "test.conf";
+    FILE* file = fopen(tn.c_str(), "a");
+    if (file)
+    {
+        fputs(str.c_str(), file);
+        fclose(file);
+        log("write file with fputs : \n----\n%s\n----", str.c_str());
+    }
+    
+    auto a = FileUtils::getInstance()->fullPathForFilename("test.conf");
+    log("%s", a.c_str());
+    
+//    ReadFile(file_name, str);
     return 0;
-}
+} // WriteFile
 
 int DownloadManager::AppendFile(const std::string file_name,
                                 const std::string content)
@@ -337,4 +347,4 @@ int DownloadManager::AppendFile(const std::string file_name,
     
     ret = WriteFile(file_name, front_content + "\n" + content);
     return ret;
-}
+} // AppendFile

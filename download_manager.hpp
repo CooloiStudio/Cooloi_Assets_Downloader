@@ -19,9 +19,10 @@ enum class DownloadStage
     kNull = 0,
     kLoadConfig = 1,
     kInitDownloader = 2,
-    kDownloadUpdate = 3,
+    kLoadUpdate = 3,
     kCheckUpdate = 4,
-    kFinished = 5
+    kGetUpdate = 5,
+    kFinished = 6
 };
 
 class DownloadManager : public cocos2d::Scene
@@ -50,8 +51,9 @@ public:
 public:
     int LoadConfig();
     int InitDownloader();
-    int DownloadUpdate();
+    int LoadUpdate();
     int CheckUpdate();
+    int GetUpdate();
 
     void Close();
     
@@ -92,6 +94,16 @@ protected:
     void push_finished(std::string finished)
     { finished_.push_back(finished); }
     
+    std::vector<std::string> update() { return update_; }
+    void push_update(std::string update)
+    { update_.push_back(update); }
+    
+    const std::string now_downloading() { return now_downloading_; }
+    void set_now_downloading(std::string now) { now_downloading_ = now; }
+    
+    int now_number() { return now_number_; }
+    void set_now_number(int num) { now_number_ = num; }
+    
 #pragma mark - Variable
 private:
     AssetsDownloader *downloader_;
@@ -99,6 +111,10 @@ private:
     
     std::map<std::string, std::string> conf_;
     std::vector<std::string> finished_;
+    std::vector<std::string> update_;
+    std::string now_downloading_;
+    
+    int now_number_;
 };
 
 #endif /* download_manager_hpp */

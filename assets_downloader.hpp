@@ -45,8 +45,9 @@ public:
     ///
     int Download(const std::string url);
     
-    
     int Reset();
+    
+    int Delet();
     
     virtual void onError(AssetsManager::ErrorCode errorCode);
     virtual void onProgress(int percent);
