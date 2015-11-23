@@ -85,6 +85,10 @@ public:
     
     DownloadStage stage() { return stage_; }
     
+    const std::vector<std::string> finished() { return finished_; }
+    
+    const std::vector<std::string> update() { return update_; }
+    
 protected:
     void set_downloader(AssetsDownloader* downloader) { downloader_ = downloader; }
     
@@ -94,11 +98,9 @@ protected:
     void push_conf(std::string key, std::string value)
     { conf_[key] = value; }
     
-    std::vector<std::string> finished() { return finished_; }
     void push_finished(std::string finished)
     { finished_.push_back(finished); }
     
-    std::vector<std::string> update() { return update_; }
     void push_update(std::string update)
     { update_.push_back(update); }
     

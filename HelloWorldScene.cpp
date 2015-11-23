@@ -65,7 +65,7 @@ bool HelloWorld::init()
     // add a label shows "Hello World"
     // create and initialize a label
     
-    auto label = Label::createWithSystemFont("Hello World", "Arail", 24);
+    auto label = Label::createWithSystemFont("Show Stage", "Arail", 24);
     
     // position the label on the center of the screen
     label->setPosition(Vec2(origin.x + visibleSize.width/2,
@@ -74,11 +74,19 @@ bool HelloWorld::init()
     // add the label as a child to this layer
     this->addChild(label, 1, "msg");
     
-    
-    auto label_percent = Label::createWithSystemFont("Hello World", "Arail", 24);
+    auto label_percent = Label::createWithSystemFont("Show package number",
+                                                     "Arail",
+                                                     20);
     label_percent->setPosition(Vec2(origin.x + visibleSize.width / 2,
                                     origin.y + label_percent->getContentSize().height));
     addChild(label_percent, 1, "percent");
+    
+    auto label_process = Label::createWithSystemFont("Show percent by each package",
+                                                     "Arail",
+                                                     20);
+    label_process->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                    origin.y + label_process->getContentSize().height * 2));
+    addChild(label_process, 1, "process");
 
     // add "HelloWorld" splash screen"
     auto sprite = Sprite::create("HelloWorld.png");
@@ -105,7 +113,6 @@ void HelloWorld::update(float)
 {
     auto dl = (DownloadManager*)Director::getInstance()->getRunningScene();
     std::string str = "";
-    auto percent = 0;
     switch (dl->stage())
     {
         case DownloadStage::kNull:
@@ -134,7 +141,36 @@ void HelloWorld::update(float)
         case DownloadStage::kGetUpdate:
         {
             str = "同步魔术资源中...";
-            percent = dl->downloader()->percent();
+            
+            std::string str_pro = "";
+            str_pro = "正在同步";
+            str_pro += std::to_string(dl->finished().size() + 1);
+            str_pro += "/";
+            str_pro += std::to_string(dl->update().size());
+            
+            auto lable_process = (Label*)getChildByName("process");
+            lable_process->setString(str_pro);
+            
+            
+            auto percent = dl->downloader()->percent();
+            std::string str_per = "";
+            switch (percent)
+            {
+                case 0:
+                    break;
+                case 100:
+                {
+                    str_per = "\n解读神谕中...";
+                }
+                default:
+                {
+                    str_per = "\n已同步 " + std::to_string(percent) + "%";
+                }
+                    break;
+            }
+            
+            auto lable_per = (Label*)getChildByName("percent");
+            lable_per->setString(str_per);
         }
             break;
         case DownloadStage::kFinished:
@@ -147,26 +183,8 @@ void HelloWorld::update(float)
         }
             break;
     }
-    std::string str_per = "";
-    switch (percent)
-    {
-        case 0:
-            break;
-        case 100:
-        {
-            str_per = "\n解读神谕中...";
-        }
-        default:
-        {
-            str_per = "\n已同步 " + std::to_string(percent) + "%";
-        }
-            break;
-    }
     auto lable = (Label*)getChildByName("msg");
     lable->setString(str);
-    
-    auto lable_per = (Label*)getChildByName("percent");
-    lable_per->setString(str_per);
     
 }
 
