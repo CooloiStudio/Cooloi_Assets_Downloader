@@ -74,6 +74,7 @@ int AssetsDownloader::Reset()
     std::string command = "rm -r ";
     // Path may include space.
     command += "\"" + path_to_save_ + "\"";
+//    command += "\"" + FileUtils::getInstance()->getWritablePath() + "\"";
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     system(command.c_str());

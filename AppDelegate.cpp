@@ -1,6 +1,5 @@
 #include "AppDelegate.h"
-
-#include "download_manager.hpp"
+#include "HelloWorldScene.h"
 
 USING_NS_CC;
 
@@ -76,9 +75,9 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     // create a scene. it's an autorelease object
-//    auto scene = HelloWorld::createScene();
+    auto scene = HelloWorld::createScene();
     
-    auto scene = DownloadManager::Create();
+//    auto scene = DownloadManager::Create();
 
     // run
     director->runWithScene(scene);

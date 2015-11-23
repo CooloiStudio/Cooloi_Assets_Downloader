@@ -2,6 +2,7 @@
 
 #include "SimpleAudioEngine.h"
 #include "download_manager.hpp"
+#include "assets_downloader.hpp"
 
 #include <iostream>
 #include <string>
@@ -14,7 +15,8 @@ USING_NS_CC;
 Scene* HelloWorld::createScene()
 {
     // 'scene' is an autorelease object
-    auto scene = Scene::create();
+//    auto scene = Scene::create();
+    auto scene = DownloadManager::Create();
     
     // 'layer' is an autorelease object
     auto layer = HelloWorld::create();
@@ -63,14 +65,20 @@ bool HelloWorld::init()
     // add a label shows "Hello World"
     // create and initialize a label
     
-    auto label = Label::createWithTTF("Hello World", "fonts/Marker Felt.ttf", 24);
+    auto label = Label::createWithSystemFont("Hello World", "Arail", 24);
     
     // position the label on the center of the screen
     label->setPosition(Vec2(origin.x + visibleSize.width/2,
                             origin.y + visibleSize.height - label->getContentSize().height));
 
     // add the label as a child to this layer
-    this->addChild(label, 1);
+    this->addChild(label, 1, "msg");
+    
+    
+    auto label_percent = Label::createWithSystemFont("Hello World", "Arail", 24);
+    label_percent->setPosition(Vec2(origin.x + visibleSize.width / 2,
+                                    origin.y + label_percent->getContentSize().height));
+    addChild(label_percent, 1, "percent");
 
     // add "HelloWorld" splash screen"
     auto sprite = Sprite::create("HelloWorld.png");
@@ -84,16 +92,88 @@ bool HelloWorld::init()
 //    auto audio = SimpleAudioEngine::getInstance();
 //    audio->playBackgroundMusic("east.mp3", true);
     
-    auto downloader = new DownloadManager();
+//    auto downloader = new DownloadManager();
+//    
+//    downloader->init();
     
-    downloader->init();
+    scheduleUpdate();
     
     return true;
 }
 
+void HelloWorld::update(float)
+{
+    auto dl = (DownloadManager*)Director::getInstance()->getRunningScene();
+    std::string str = "";
+    auto percent = 0;
+    switch (dl->stage())
+    {
+        case DownloadStage::kNull:
+            break;
+            
+        case DownloadStage::kLoadConfig:
+        {
+            str = "加载咒语";
+        }
+            break;
+        case DownloadStage::kInitDownloader:
+        {
+            str = "正在感应魔法能量";
+        }
+            break;
+        case DownloadStage::kLoadUpdate:
+        {
+            str = "寻找最新的神谕";
+        }
+            break;
+        case DownloadStage::kCheckUpdate:
+        {
+            str = "正在突破混沌，检查魔力碎片";
+        }
+            break;
+        case DownloadStage::kGetUpdate:
+        {
+            str = "同步魔术资源中...";
+            percent = dl->downloader()->percent();
+        }
+            break;
+        case DownloadStage::kFinished:
+        {
+            str = "准备完毕，开始进入图兰卡";
+            unscheduleUpdate();
+            
+            auto audio = SimpleAudioEngine::getInstance();
+            audio->playBackgroundMusic("east.mp3", true);
+        }
+            break;
+    }
+    std::string str_per = "";
+    switch (percent)
+    {
+        case 0:
+            break;
+        case 100:
+        {
+            str_per = "\n解读神谕中...";
+        }
+        default:
+        {
+            str_per = "\n已同步 " + std::to_string(percent) + "%";
+        }
+            break;
+    }
+    auto lable = (Label*)getChildByName("msg");
+    lable->setString(str);
+    
+    auto lable_per = (Label*)getChildByName("percent");
+    lable_per->setString(str_per);
+    
+}
 
 void HelloWorld::menuCloseCallback(Ref* pSender)
 {
+    auto dl = (DownloadManager*)Director::getInstance()->getRunningScene();
+    dl->downloader()->Reset();
     Director::getInstance()->end();
 
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)

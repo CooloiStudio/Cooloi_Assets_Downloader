@@ -83,10 +83,11 @@ private:
 public:
     AssetsDownloader* const downloader() { return downloader_; }
     
+    DownloadStage stage() { return stage_; }
+    
 protected:
     void set_downloader(AssetsDownloader* downloader) { downloader_ = downloader; }
     
-    DownloadStage stage() { return stage_; }
     void set_stage(DownloadStage stage) { stage_ = stage; }
     
     std::map<std::string, std::string> conf() { return conf_; }

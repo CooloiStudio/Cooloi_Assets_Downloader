@@ -153,7 +153,11 @@ int DownloadManager::CheckUpdate()
         }
     }
     
-    if (!update().empty())
+    if (update().empty())
+    {
+        set_stage(DownloadStage::kFinished);
+    }
+    else
     {
         log("New package find!");
         GetUpdate();
@@ -198,10 +202,9 @@ int DownloadManager::GetUpdate()
         WriteFile(conf_["LOCAL_NAME"], content);
         auto s = FileUtils::getInstance()->getStringFromFile(conf_["LOCAL_NAME"]);
         log("%s", s.c_str());
+        set_stage(DownloadStage::kFinished);
     }
-    
-    
-    
+
     return 0;
 } // GetUpdate
 
@@ -308,10 +311,14 @@ int DownloadManager::WriteFile(const std::string file_name,
                                const std::string content)
 {
     log("Preparing write file : %s", file_name.c_str());
-    std::string file_to_write;
+    std::string file_to_write = "";
     FindPathWithFile(file_name, file_to_write);
     if ("" == file_to_write)
-        file_to_write = FileUtils::getInstance()->getWritablePath() + file_name;
+    {
+        file_to_write = FileUtils::getInstance()->getWritablePath();
+//        file_to_write += conf_["Dir"];
+        file_to_write += file_name;
+    }
     
     log("Write path : %s", file_to_write.c_str());
     std::ofstream outfile;
