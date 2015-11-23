@@ -177,15 +177,11 @@ void HelloWorld::update(float)
         {
             str = "准备完毕，开始进入图兰卡";
             unscheduleUpdate();
-            
-            auto audio = SimpleAudioEngine::getInstance();
-            audio->playBackgroundMusic("east.mp3", true);
         }
             break;
     }
     auto lable = (Label*)getChildByName("msg");
     lable->setString(str);
-    
 }
 
 void HelloWorld::menuCloseCallback(Ref* pSender)
