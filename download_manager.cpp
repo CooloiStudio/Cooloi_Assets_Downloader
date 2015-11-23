@@ -140,14 +140,12 @@ int DownloadManager::CheckUpdate()
     set_stage(DownloadStage::kCheckUpdate);
     auto ret = 0;
     if ("" != now_downloading_) push_finished(now_downloading());
-    std::map<std::string, std::string> pkg_map;
-    ret = ReadConf(conf_["NAME"], pkg_map);
-    std::map<std::string, std::string> loc_map;
-    ret = ReadConf(conf_["LOCAL_NAME"], loc_map);
+    ret = ReadConf(conf_["NAME"], pkg_map_);
+    ret = ReadConf(conf_["LOCAL_NAME"], loc_map_);
     
-    for (auto p : pkg_map)
+    for (auto p : pkg_map())
     {
-        if (p.second != loc_map[p.first])
+        if (p.second != loc_map_[p.first])
         {
             push_update(p.first);
         }
@@ -171,8 +169,6 @@ int DownloadManager::GetUpdate()
     set_stage(DownloadStage::kGetUpdate);
     auto ret = 0;
     if ("" != now_downloading_) push_finished(now_downloading());
-    std::map<std::string, std::string> pkg_map;
-    ret = ReadConf(conf_["NAME"], pkg_map);
     
     for (auto u : update())
     {
@@ -188,14 +184,14 @@ int DownloadManager::GetUpdate()
         if (jump) continue;
         
         set_now_downloading(u);
-        Download(conf().at("SER") + pkg_map[u]);
+        Download(conf().at("SER") + pkg_map_[u]);
         break;
     }
     
     if (update().size() == finished().size())
     {
         std::string content = "#loacl list\n";
-        for (auto p : pkg_map)
+        for (auto p : pkg_map())
         {
             content += (p.first + " = " + p.second + "\n");
         }
@@ -205,7 +201,7 @@ int DownloadManager::GetUpdate()
         set_stage(DownloadStage::kFinished);
     }
 
-    return 0;
+    return ret;
 } // GetUpdate
 
 void DownloadManager::Close()
@@ -265,8 +261,9 @@ int DownloadManager::ConfRegex(const std::string str,
     {
         for(auto q : match)
         {
-            log("%s", q.str().c_str());
+            log("\t%s", q.str().c_str());
         }
+        log("----");
         arg = match[1].str();
         value = match[2].str();
     }

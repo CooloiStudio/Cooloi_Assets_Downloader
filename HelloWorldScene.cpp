@@ -151,7 +151,6 @@ void HelloWorld::update(float)
             auto lable_process = (Label*)getChildByName("process");
             lable_process->setString(str_pro);
             
-            
             auto percent = dl->downloader()->percent();
             std::string str_per = "";
             switch (percent)

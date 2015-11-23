@@ -94,9 +94,19 @@ protected:
     
     void set_stage(DownloadStage stage) { stage_ = stage; }
     
-    std::map<std::string, std::string> conf() { return conf_; }
+    const std::map<std::string, std::string> conf() { return conf_; }
     void push_conf(std::string key, std::string value)
     { conf_[key] = value; }
+    
+    
+    const std::map<std::string, std::string> pkg_map() { return pkg_map_; }
+    void push_pkg_map(std::string key, std::string value)
+    { pkg_map_[key] = value; }
+    
+    
+    const std::map<std::string, std::string> loc_map() { return loc_map_; }
+    void push_loc_map(std::string key, std::string value)
+    { loc_map_[key] = value; }
     
     void push_finished(std::string finished)
     { finished_.push_back(finished); }
@@ -116,6 +126,9 @@ private:
     DownloadStage stage_;
     
     std::map<std::string, std::string> conf_;
+    std::map<std::string, std::string> pkg_map_;
+    std::map<std::string, std::string> loc_map_;
+    
     std::vector<std::string> finished_;
     std::vector<std::string> update_;
     std::string now_downloading_;
