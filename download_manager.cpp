@@ -84,6 +84,13 @@ void DownloadManager::update(float dt)
         }
             break;
             
+        case AssetsManager::ErrorCode::NETWORK:
+        {
+            set_stage(DownloadStage::kNull);
+            return;
+        }
+            break;
+            
         default:
             break;
     }
