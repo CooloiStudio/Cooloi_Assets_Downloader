@@ -71,11 +71,11 @@ void DownloadManager::update(float dt)
     
     switch (downloader()->status())
     {
-        case AssetsManager::ErrorCode::CREATE_FILE:
-        {
-            return;
-        }
-            break;
+//        case AssetsManager::ErrorCode::CREATE_FILE:
+//        {
+//            return;
+//        }
+//            break;
             
         case AssetsManager::ErrorCode::UNCOMPRESS:
         {
