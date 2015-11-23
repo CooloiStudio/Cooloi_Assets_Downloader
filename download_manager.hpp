@@ -11,7 +11,6 @@
 
 #include "cocos2d.h"
 
-class AssetsDownload;
 class AssetsDownloader;
 
 enum class DownloadStage
