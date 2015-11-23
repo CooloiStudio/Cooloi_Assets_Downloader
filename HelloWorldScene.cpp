@@ -186,10 +186,12 @@ void HelloWorld::update(float)
 void HelloWorld::menuCloseCallback(Ref* pSender)
 {
     auto dl = (DownloadManager*)Director::getInstance()->getRunningScene();
-    dl->downloader()->Reset();
-    Director::getInstance()->end();
-
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
-    exit(0);
-#endif
+    dl->GetUpdate();
+    
+//    dl->downloader()->Reset();
+//    Director::getInstance()->end();
+//
+//#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+//    exit(0);
+//#endif
 }

@@ -69,8 +69,24 @@ void DownloadManager::update(float dt)
     
     unscheduleUpdate();
     
-    if (AssetsManager::ErrorCode::CREATE_FILE != downloader()->status())
-        return;
+    switch (downloader()->status())
+    {
+        case AssetsManager::ErrorCode::CREATE_FILE:
+        {
+            return;
+        }
+            break;
+            
+        case AssetsManager::ErrorCode::UNCOMPRESS:
+        {
+            set_stage(DownloadStage::kNull);
+            return;
+        }
+            break;
+            
+        default:
+            break;
+    }
     
     switch (stage())
     {
@@ -102,6 +118,7 @@ int DownloadManager::LoadConfig()
     std::string file_name = "";
 #if COCOS2D_DEBUG
     file_name = "Cooloi_ASDL_DEBUG.conf";
+//    file_name = "Cooloi_ASDL.conf";
 #else
     file_name = "Cooloi_ASDL.conf";
 #endif

@@ -123,6 +123,12 @@ void AssetsDownloader::onError(AssetsManager::ErrorCode errorCode)
         }
             break;
             
+        case AssetsManager::ErrorCode::UNCOMPRESS:
+        {
+            set_downloading(false);
+        }
+            break;
+            
         default:
             set_downloading(false);
             break;
