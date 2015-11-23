@@ -158,7 +158,7 @@ int DownloadManager::CheckUpdate()
     else
     {
         log("New package find!");
-        GetUpdate();
+//        GetUpdate();
     }
     return ret;
 } // CheckUpdate
