@@ -337,7 +337,9 @@ int DownloadManager::ReadConfigFromJson(const std::string file_name,
     }
     for (auto iter = d.MemberBegin() ; iter != d.MemberEnd() ; iter++)
     {
-        log("read config name is %s. value is %s", iter->name.GetString(), iter->value.GetString());
+        log("\tKey\t : %s\n\tValue : %s\n-----",
+            iter->name.GetString(),
+            iter->value.GetString());
         conf_map[iter->name.GetString()] = iter->value.GetString();
     }
     return 0;
