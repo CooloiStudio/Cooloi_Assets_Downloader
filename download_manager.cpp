@@ -17,6 +17,11 @@
 #include <regex>
 #include <stdio.h>
 
+#include "json/rapidjson.h"
+#include "json/document.h"
+#include "json/writer.h"
+#include "json/stringbuffer.h"
+
 using namespace cocos2d;
 using namespace CocosDenshion;
 
@@ -125,14 +130,24 @@ int DownloadManager::LoadConfig()
     set_stage(DownloadStage::kLoadConfig);
     auto ret = 0;
     std::string file_name = "";
-#if COCOS2D_DEBUG
-    file_name = "Cooloi_ASDL_DEBUG.conf";
+//#if COCOS2D_DEBUG
+//    file_name = "Cooloi_ASDL_DEBUG.conf";
+////    file_name = "Cooloi_ASDL.conf";
+//#else
 //    file_name = "Cooloi_ASDL.conf";
+//#endif
+//    ret = ReadConf(file_name,
+//                   conf_);
+    
+#if COCOS2D_DEBUG
+    file_name = "Cooloi_ASDL_DEBUG.json";
+    //    file_name = "Cooloi_ASDL.json";
 #else
-    file_name = "Cooloi_ASDL.conf";
+    file_name = "Cooloi_ASDL.json";
 #endif
-    ret = ReadConf(file_name,
+    ret = ReadConfigFromJson(file_name,
                    conf_);
+    
     if (0 != ret)
     {
         set_stage(DownloadStage::kNull);
@@ -166,6 +181,9 @@ int DownloadManager::CheckUpdate()
     set_stage(DownloadStage::kCheckUpdate);
     auto ret = 0;
     if ("" != now_downloading_) push_finished(now_downloading());
+//    ret = ReadConf(conf_["NAME"], pkg_map_);
+//    ret = ReadConf(conf_["LOCAL_NAME"], loc_map_);
+    
     ret = ReadConf(conf_["NAME"], pkg_map_);
     ret = ReadConf(conf_["LOCAL_NAME"], loc_map_);
     
@@ -263,6 +281,7 @@ int DownloadManager::ReadConf(const std::string file_name,
         return 1;
     }
     
+    
     auto str = FileUtils::getInstance()->getStringFromFile(file_name);
     log("getStringFromFile\n%s",str.c_str());
     
@@ -302,6 +321,62 @@ int DownloadManager::ConfRegex(const std::string str,
     return 0;
 } // ConfRegex
 
+int DownloadManager::ReadConfigFromJson(const std::string file_name,
+                                        std::map<std::string, std::string> &conf_map)
+{
+    std::string file_with_path = "";
+    FindPathWithFile(file_name, file_with_path);
+    auto str = FileUtils::getInstance()->getStringFromFile(file_with_path.c_str());
+    
+    rapidjson::Document d;
+    d.Parse<0>(str.c_str());
+    for (auto iter = d.MemberBegin() ; iter != d.MemberEnd() ; iter++)
+    {
+        log("read config name is %s. value is %s", iter->name.GetString(), iter->value.GetString());
+        conf_map[iter->name.GetString()] = iter->value.GetString();
+    }
+    return 0;
+}
+
+int DownloadManager::WriteConfigToJson(const std::string file_name,
+                                       std::map<std::string, std::string> &conf_map)
+{
+    std::string file_with_path = "";
+    FindPathWithFile(file_name, file_with_path);
+    
+    rapidjson::Document d;
+    d.SetObject();
+    for(auto c : conf_map)
+    {
+        log("write config name is %s, value is %s", c.first.c_str(), c.second.c_str());
+        rapidjson::Value name(rapidjson::kStringType);
+        name.SetString(c.first.c_str(), (int)c.first.length());
+        
+        rapidjson::Value value(rapidjson::kStringType);
+        value.SetString(c.second.c_str(), (int)c.second.length());
+        
+        d.AddMember(name, value, d.GetAllocator());
+    }
+    
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> write(buffer);
+    d.Accept(write);
+    
+    log("now write config is %s", buffer.GetString());
+    
+    if ("" == file_with_path)
+    {
+        file_with_path = FileUtils::getInstance()->getWritablePath() + file_name;
+    }
+    
+    FILE* file = fopen(file_with_path.c_str(), "wb");
+    if (file)
+    {
+        fputs(buffer.GetString(), file);
+        fclose(file);
+    }
+    return 0;
+}
 
 int DownloadManager::ReadFile(const std::string file_name,
                               std::string &content)
