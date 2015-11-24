@@ -334,6 +334,10 @@ int DownloadManager::ReadConfigFromJson(const std::string file_name,
     log("getStringFromFile : %s", str.c_str());
     rapidjson::Document d;
     d.Parse<0>(str.c_str());
+    if ("" == str)
+    {
+        return 1001;
+    }
     if(!d.IsObject())
     {
         set_stage(DownloadStage::kFileNotFound);
