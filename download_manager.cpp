@@ -328,17 +328,12 @@ int DownloadManager::ReadConfigFromJson(const std::string file_name,
     FindPathWithFile(file_name, file_with_path);
     auto str = FileUtils::getInstance()->getStringFromFile(file_with_path.c_str());
     log("getStringFromFile : %s", str.c_str());
-    if ("" == str)
-    {
-        set_stage(DownloadStage::kFileNotFound);
-        return 1404;
-    }
     rapidjson::Document d;
     d.Parse<0>(str.c_str());
     if(!d.IsObject())
     {
         set_stage(DownloadStage::kFileNotFound);
-        return 1404;        
+        return 1404;
     }
     for (auto iter = d.MemberBegin() ; iter != d.MemberEnd() ; iter++)
     {
