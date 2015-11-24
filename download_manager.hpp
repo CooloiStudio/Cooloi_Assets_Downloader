@@ -62,12 +62,17 @@ private:
     
     int ReadConf(const std::string file_name,
                  std::map<std::string, std::string> &conf_map);
+    
+    int ReadConfigFromJson(const std::string file_name,
+                           std::map<std::string, std::string> &conf_map);
+    
     int ConfRegex(const std::string str,
                   std::string &arg,
                   std::string &value);
     
     int ReadFile(const std::string file_name,
                  std::string &content);
+    
     
     int WriteFile(const std::string file_name,
                   const std::string content);

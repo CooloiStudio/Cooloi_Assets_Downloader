@@ -144,10 +144,6 @@ int DownloadManager::InitDownloader()
 {
     log("\nStage : Initialization Downloader.\n");
     set_stage(DownloadStage::kInitDownloader);
-    for (auto c : conf_)
-    {
-        log("%s", c.first.c_str());
-    }
     downloader_ = new AssetsDownloader(conf_["URL"],
                                        conf_["VER"],
                                        conf_["DIR"],
