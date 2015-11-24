@@ -26,7 +26,9 @@ downloader_(nullptr),
 stage_(DownloadStage ::kNull),
 conf_(),
 finished_(),
-now_downloading_("")
+update_(),
+now_downloading_(""),
+now_number_(0)
 {
 } // DownloadManager
 
@@ -142,6 +144,10 @@ int DownloadManager::InitDownloader()
 {
     log("\nStage : Initialization Downloader.\n");
     set_stage(DownloadStage::kInitDownloader);
+    for (auto c : conf_)
+    {
+        log("%s", c.first.c_str());
+    }
     downloader_ = new AssetsDownloader(conf_["URL"],
                                        conf_["VER"],
                                        conf_["DIR"],
@@ -261,6 +267,9 @@ int DownloadManager::ReadConf(const std::string file_name,
         return 1;
     }
     
+    auto str = FileUtils::getInstance()->getStringFromFile(file_name);
+    log("getStringFromFile\n%s",str.c_str());
+    
     std::ifstream in_file(path_with_file);
     
     std::string str_by_line = "";
@@ -278,8 +287,9 @@ int DownloadManager::ConfRegex(const std::string str,
                                std::string &arg,
                                std::string &value)
 {
+    log("Regex line : %s", str.c_str());
     std::regex rgx("^(\\w+)\\s*\\=\\s*([^\\s]+)$");
-    std:: smatch match;
+    std::smatch match;
     
     if (std::regex_search(str.begin(), str.end(), match, rgx))
     {
@@ -389,7 +399,7 @@ int DownloadManager::FindPathWithFile(const std::string file_name,
         path = FileUtils::getInstance()->fullPathForFilename(temp_name);
         if ("" == path) log("File not exist!");
     }
-    if ("" != path);
+    if ("" != path)
         log("Find file with : %s", path.c_str());
     path_with_file = path;
     return 0;
