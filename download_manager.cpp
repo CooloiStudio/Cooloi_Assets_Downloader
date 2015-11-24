@@ -335,6 +335,11 @@ int DownloadManager::ReadConfigFromJson(const std::string file_name,
     }
     rapidjson::Document d;
     d.Parse<0>(str.c_str());
+    if(!d.IsObject())
+    {
+        set_stage(DownloadStage::kFileNotFound);
+        return 1404;        
+    }
     for (auto iter = d.MemberBegin() ; iter != d.MemberEnd() ; iter++)
     {
         log("read config name is %s. value is %s", iter->name.GetString(), iter->value.GetString());
