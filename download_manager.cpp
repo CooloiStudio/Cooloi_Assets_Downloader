@@ -338,11 +338,11 @@ int DownloadManager::ReadConfigFromJson(const std::string file_name,
     if(!d.IsObject())
     {
         set_stage(DownloadStage::kFileNotFound);
-        return 1404;        
+        return 1404;
     }
     for (auto iter = d.MemberBegin() ; iter != d.MemberEnd() ; iter++)
     {
-        log("\tKey\t : %s\n\tValue : %s\n-----",
+        log("\tKey\t : %s\n\tValue : %s\n\t----",
             iter->name.GetString(),
             iter->value.GetString());
         conf_map[iter->name.GetString()] = iter->value.GetString();
