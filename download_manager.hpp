@@ -21,7 +21,8 @@ enum class DownloadStage
     kLoadUpdate = 3,
     kCheckUpdate = 4,
     kGetUpdate = 5,
-    kFinished = 6
+    kFinished = 6,
+    kFileNotFound = 1404
 };
 
 class DownloadManager : public cocos2d::Scene

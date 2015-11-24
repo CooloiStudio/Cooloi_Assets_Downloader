@@ -184,8 +184,8 @@ int DownloadManager::CheckUpdate()
 //    ret = ReadConf(conf_["NAME"], pkg_map_);
 //    ret = ReadConf(conf_["LOCAL_NAME"], loc_map_);
     
-    ret = ReadConf(conf_["NAME"], pkg_map_);
-    ret = ReadConf(conf_["LOCAL_NAME"], loc_map_);
+    ret = ReadConfigFromJson(conf_["NAME"], pkg_map_);
+    ret = ReadConfigFromJson(conf_["LOCAL_NAME"], loc_map_);
     
     for (auto p : pkg_map())
     {
@@ -327,7 +327,11 @@ int DownloadManager::ReadConfigFromJson(const std::string file_name,
     std::string file_with_path = "";
     FindPathWithFile(file_name, file_with_path);
     auto str = FileUtils::getInstance()->getStringFromFile(file_with_path.c_str());
-    
+    if ("" == str)
+    {
+        set_stage(DownloadStage::kFileNotFound);
+        return 1404;
+    }
     rapidjson::Document d;
     d.Parse<0>(str.c_str());
     for (auto iter = d.MemberBegin() ; iter != d.MemberEnd() ; iter++)
