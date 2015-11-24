@@ -146,7 +146,7 @@ int DownloadManager::LoadConfig()
     file_name = "Cooloi_ASDL.json";
 #endif
     ret = ReadConfigFromJson(file_name,
-                   conf_);
+                             conf_);
     
     if (0 != ret)
     {
@@ -327,6 +327,7 @@ int DownloadManager::ReadConfigFromJson(const std::string file_name,
     std::string file_with_path = "";
     FindPathWithFile(file_name, file_with_path);
     auto str = FileUtils::getInstance()->getStringFromFile(file_with_path.c_str());
+    log("getStringFromFile : %s", str.c_str());
     if ("" == str)
     {
         set_stage(DownloadStage::kFileNotFound);
