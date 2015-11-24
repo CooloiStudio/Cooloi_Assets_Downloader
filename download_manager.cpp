@@ -234,7 +234,7 @@ int DownloadManager::GetUpdate()
     
     if (update().size() == finished().size())
     {
-        std::string content = "#loacl list\n";
+        std::string content = "";
         for (auto p : pkg_map())
         {
             content += (p.first + " = " + p.second + "\n");
@@ -439,7 +439,9 @@ int DownloadManager::WriteFile(const std::string file_name,
         log("Open file fail, file name: %s", file_name.c_str());
         return 1001;
     }
-    std::string str = "#" + file_name + "\n" + content;
+    std::string str = "";
+//    str += "#" + file_name + "\n";
+    str += content;
     outfile << str;
     log("write file with fstream : \n----\n%s\n----", str.c_str());
     outfile.close();
