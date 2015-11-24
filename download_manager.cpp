@@ -331,18 +331,20 @@ int DownloadManager::ReadConfigFromJson(const std::string file_name,
     std::string file_with_path = "";
     FindPathWithFile(file_name, file_with_path);
     auto str = FileUtils::getInstance()->getStringFromFile(file_with_path.c_str());
-    log("getStringFromFile : %s", str.c_str());
-    rapidjson::Document d;
-    d.Parse<0>(str.c_str());
     if ("" == str)
     {
         return 1001;
     }
+    log("Get string success, preparing convert to json");
+    rapidjson::Document d;
+    d.Parse<0>(str.c_str());
     if(!d.IsObject())
     {
+        log("Convert to json fail!");
         set_stage(DownloadStage::kFileNotFound);
         return 1404;
     }
+    log("Convert to json finished.\n");
     log("Read Json start : %s", file_name.c_str());
     for (auto iter = d.MemberBegin() ; iter != d.MemberEnd() ; iter++)
     {
