@@ -327,12 +327,7 @@ int DownloadManager::ReadConfigFromJson(const std::string file_name,
     std::string file_with_path = "";
     FindPathWithFile(file_name, file_with_path);
     auto str = FileUtils::getInstance()->getStringFromFile(file_with_path.c_str());
-    if ("" == str)
-    {
-        log("Open file %s fail!", file_name.c_str());
-        set_stage(DownloadStage::kFileNotFound);
-        return 1404;
-    }
+    log("getStringFromFile : %s", str.c_str());
     rapidjson::Document d;
     d.Parse<0>(str.c_str());
     if(!d.IsObject())
