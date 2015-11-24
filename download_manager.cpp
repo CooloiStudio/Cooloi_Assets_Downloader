@@ -271,6 +271,8 @@ int DownloadManager::ReadConf(const std::string file_name,
     log("getStringFromFile\n%s",str.c_str());
     
     std::ifstream in_file(path_with_file);
+    if(in_file.fail())
+        return 1001;
     
     std::string str_by_line = "";
     while (std::getline(in_file, str_by_line))
