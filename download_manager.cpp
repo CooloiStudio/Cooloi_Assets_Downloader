@@ -234,13 +234,17 @@ int DownloadManager::GetUpdate()
     
     if (update().size() == finished().size())
     {
-        std::string content = "";
-        for (auto p : pkg_map())
-        {
-            content += (p.first + " = " + p.second + "\n");
-        }
-        WriteFile(conf_["LOCAL_NAME"], content);
-        auto s = FileUtils::getInstance()->getStringFromFile(conf_["LOCAL_NAME"]);
+//        std::string content = "";
+//        for (auto p : pkg_map())
+//        {
+//            content += (p.first + " = " + p.second + "\n");
+//        }
+//        WriteFile(conf_["LOCAL_NAME"], content);
+        WriteConfigToJson(conf_["LOCAL_NAME"],
+                          pkg_map());
+        std::string path_with_file = "";
+        FindPathWithFile(conf_["LOCAL_NAME"], path_with_file);
+        auto s = FileUtils::getInstance()->getStringFromFile(path_with_file);
         log("%s", s.c_str());
         set_stage(DownloadStage::kFinished);
     }
@@ -335,41 +339,69 @@ int DownloadManager::ReadConfigFromJson(const std::string file_name,
         set_stage(DownloadStage::kFileNotFound);
         return 1404;
     }
+    log("Read Json start : %s", file_name.c_str());
     for (auto iter = d.MemberBegin() ; iter != d.MemberEnd() ; iter++)
     {
-        log("\tKey\t : %s\n\tValue : %s\n\t----",
+        log("\t-\n\tKey\t : %s\n\tValue : %s",
             iter->name.GetString(),
             iter->value.GetString());
         conf_map[iter->name.GetString()] = iter->value.GetString();
     }
+    log("Read Json finished : %s\n", file_name.c_str());
     return 0;
 }
 
 int DownloadManager::WriteConfigToJson(const std::string file_name,
-                                       std::map<std::string, std::string> &conf_map)
+                                       const std::map<std::string, std::string> conf_map)
 {
     std::string file_with_path = "";
     FindPathWithFile(file_name, file_with_path);
+//    
+//    rapidjson::Document d;
+//    d.SetObject();
+//    log("Write Json");
+//    for(auto c : conf_map)
+//    {
+//        log("\tKey\t : %s\n\tValue : %s\n\t----", c.first.c_str(), c.second.c_str());
+//        rapidjson::Value name(rapidjson::kStringType);
+//        name.SetString(c.first.c_str(), (int)c.first.length());
+//        
+//        rapidjson::Value value(rapidjson::kStringType);
+//        value.SetString(c.second.c_str(), (int)c.second.length());
+//        
+//        d.AddMember(name, value, d.GetAllocator());
+//    }
+//    
+//    rapidjson::StringBuffer buffer;
+//    rapidjson::Writer<rapidjson::StringBuffer> write(buffer);
+//    d.Accept(write);
+//    
+//    log("now write config is %s", buffer.GetString());
     
-    rapidjson::Document d;
-    d.SetObject();
+    log("Write Json start : %s", file_name.c_str());
+    
+    std::string content = "";
+    content += "{\n";
+    auto n = 1;
     for(auto c : conf_map)
     {
-        log("write config name is %s, value is %s", c.first.c_str(), c.second.c_str());
-        rapidjson::Value name(rapidjson::kStringType);
-        name.SetString(c.first.c_str(), (int)c.first.length());
-        
-        rapidjson::Value value(rapidjson::kStringType);
-        value.SetString(c.second.c_str(), (int)c.second.length());
-        
-        d.AddMember(name, value, d.GetAllocator());
+        log("\t+\n\tKey\t : %s\n\tValue : %s",
+            c.first.c_str(),
+            c.second.c_str());
+        content += "\"";
+        content += c.first;
+        content += "\" : \"";
+        content += c.second;
+        content += "\"";
+        if (n != conf_map.size())
+        {
+            content += ",\n";
+            n++;
+        }
     }
+    content += "\n}";
     
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> write(buffer);
-    d.Accept(write);
-    
-    log("now write config is %s", buffer.GetString());
+    log("Write Json finished : %s\n", file_name.c_str());
     
     if ("" == file_with_path)
     {
@@ -379,7 +411,7 @@ int DownloadManager::WriteConfigToJson(const std::string file_name,
     FILE* file = fopen(file_with_path.c_str(), "wb");
     if (file)
     {
-        fputs(buffer.GetString(), file);
+        fputs(content.c_str(), file);
         fclose(file);
     }
     return 0;

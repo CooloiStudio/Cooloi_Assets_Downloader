@@ -72,7 +72,7 @@ private:
                            std::map<std::string, std::string> &conf_map);
     
     int WriteConfigToJson(const std::string file_name,
-                          std::map<std::string, std::string> &conf_map);
+                          const std::map<std::string, std::string> conf_map);
     
     int ReadFile(const std::string file_name,
                  std::string &content);
