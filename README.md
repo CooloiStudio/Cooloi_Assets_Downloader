@@ -17,6 +17,7 @@ Cooloi_ASDL.json
 }
 ```
 |key|explain|
+| --- | :-- |
 |URL|包含资源列表json的文件下载地址|
 |VER|cocos2d引擎要求的版本号，在这个项目中一切都是必要下载，所以推荐使用时间戳|
 |DIR|本地存放文件夹名称|
