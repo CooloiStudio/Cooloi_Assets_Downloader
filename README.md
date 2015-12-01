@@ -5,7 +5,7 @@ Cooloi_Assets_Downloader base on Cocos2d-x 3.8.1
 样例如下
 
 Cooloi_ASDL.json
-
+```
 {
 "URL" : "http://host:port/src_list.zip",
 "VER" : "http://turanga.deskxd.com/thanks/pubdate/",
@@ -15,7 +15,7 @@ Cooloi_ASDL.json
 "LOCAL_NAME" : "loc_list.json",
 "SER" : "http://host:port/"
 }
-
+```
 还需要配置debug模式使用的json
 
 Cooloi_ASDL_DEBUG.json
