@@ -7,13 +7,13 @@ Cooloi_Assets_Downloader base on Cocos2d-x 3.8.1
 Cooloi_ASDL.json
 ```
 {
-"URL" : "http://host:port/src_list.zip",
-"VER" : "http://turanga.deskxd.com/thanks/pubdate/",
-"DIR" : "download",
-"TRY" : "10",
-"NAME" : "src_list.json",
-"LOCAL_NAME" : "loc_list.json",
-"SER" : "http://host:port/"
+  "URL" : "http://host:port/src_list.zip",
+  "VER" : "http://turanga.deskxd.com/thanks/pubdate/",
+  "DIR" : "download",
+  "TRY" : "10",
+  "NAME" : "src_list.json",
+  "LOCAL_NAME" : "loc_list.json",
+  "SER" : "http://host:port/"
 }
 ```
 还需要配置debug模式使用的json
