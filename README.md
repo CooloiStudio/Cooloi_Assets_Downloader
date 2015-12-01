@@ -5,6 +5,7 @@ Cooloi_Assets_Downloader base on Cocos2d-x 3.8.1
 样例如下
 
 Cooloi_ASDL.json
+
 {
 "URL" : "http://host:port/src_list.zip",
 "VER" : "http://turanga.deskxd.com/thanks/pubdate/",
@@ -18,7 +19,9 @@ Cooloi_ASDL.json
 还需要配置debug模式使用的json
 
 Cooloi_ASDL_DEBUG.json
+
 内容与 Cooloi_ASDL.json 相同
+
 该文件将在debug模式中生效(Xcode中需要设置COCOS_DEBUG=1; eclipse暂不生效)
 
 <!--Cooloi_ASDL.conf-->
