@@ -1,0 +1,9 @@
+{
+    "URL" : "http://host:port/src_list.zip",
+    "VER" : "http://turanga.deskxd.com/thanks/pubdate/",
+    "DIR" : "download",
+    "TRY" : "10",
+    "NAME" : "src_list.json",
+    "LOCAL_NAME" : "loc_list.json",
+    "SER" : "http://host:port/"
+}
