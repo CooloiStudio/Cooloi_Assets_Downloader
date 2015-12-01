@@ -16,6 +16,15 @@ Cooloi_ASDL.json
   "SER" : "http://host:port/"
 }
 ```
+|key|explain|
+|URL|包含资源列表json的文件下载地址|
+|VER|cocos2d引擎要求的版本号，在这个项目中一切都是必要下载，所以推荐使用时间戳|
+|DIR|本地存放文件夹名称|
+|TRY|下载失败后重试的次数|
+|NAME|资源列表json的文件名|
+|LOCAL_NAME|已经下载到本地的资源的列表|
+|SER|资源服务下载地址或前缀|
+
 还需要配置debug模式使用的json
 
 Cooloi_ASDL_DEBUG.json
