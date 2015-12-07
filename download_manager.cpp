@@ -104,12 +104,6 @@ void DownloadManager::update(float dt)
     
     switch (stage())
     {
-        case DownloadStage ::kLoadUpdate:
-        {
-            CheckUpdate();
-        }
-            break;
-            
         case DownloadStage ::kGetUpdate:
         {
             GetUpdate();
@@ -171,7 +165,17 @@ int DownloadManager::LoadUpdate()
 {
     log("\nStage : Download update info.\n");
     set_stage(DownloadStage::kLoadUpdate);
-    Download(conf_["URL"]);
+//    Download(conf_["URL"]);
+    
+    network::HttpRequest* request = new (std::nothrow) network::HttpRequest();
+    // required fields
+    request->setUrl(conf().at("URL").c_str());
+    request->setRequestType(network::HttpRequest::Type::GET);
+    request->setResponseCallback(CC_CALLBACK_2(DownloadManager::OnHttpRequestCompleted, this));
+    request->setTag("LoadUpdate");
+    network::HttpClient::getInstance()->send(request);
+    request->release();
+    
     return 0;
 } // LoadUpdate
 
@@ -362,27 +366,6 @@ int DownloadManager::WriteConfigToJson(const std::string file_name,
 {
     std::string file_with_path = "";
     FindPathWithFile(file_name, file_with_path);
-//    
-//    rapidjson::Document d;
-//    d.SetObject();
-//    log("Write Json");
-//    for(auto c : conf_map)
-//    {
-//        log("\tKey\t : %s\n\tValue : %s\n\t----", c.first.c_str(), c.second.c_str());
-//        rapidjson::Value name(rapidjson::kStringType);
-//        name.SetString(c.first.c_str(), (int)c.first.length());
-//        
-//        rapidjson::Value value(rapidjson::kStringType);
-//        value.SetString(c.second.c_str(), (int)c.second.length());
-//        
-//        d.AddMember(name, value, d.GetAllocator());
-//    }
-//    
-//    rapidjson::StringBuffer buffer;
-//    rapidjson::Writer<rapidjson::StringBuffer> write(buffer);
-//    d.Accept(write);
-//    
-//    log("now write config is %s", buffer.GetString());
     
     log("Write Json start : %s", file_name.c_str());
     
@@ -524,3 +507,62 @@ int DownloadManager::FindPathWithFile(const std::string file_name,
     path_with_file = path;
     return 0;
 } // FindPathWithFile
+
+void DownloadManager::OnHttpRequestCompleted(cocos2d::network::HttpClient *sender,
+                                             cocos2d::network::HttpResponse *response)
+{
+    if (!response)
+    {
+        return;
+    }
+    
+    // You can get original request type from: response->request->reqType
+    if (0 != strlen(response->getHttpRequest()->getTag()))
+    {
+        log("%s completed", response->getHttpRequest()->getTag());
+    }
+    
+    long statusCode = response->getResponseCode();
+    char statusString[64] = {};
+    sprintf(statusString, "HTTP Status Code: %ld, tag = %s", statusCode, response->getHttpRequest()->getTag());
+    
+    log("response code: %ld", statusCode);
+    
+    if (!response->isSucceed())
+    {
+        MessageBox("请稍后重试", "服务器异常");
+        log("response failed");
+        log("error buffer: %s", response->getErrorBuffer());
+        return;
+    }
+    
+    // dump data
+    std::vector<char> *buffer = response->getResponseData();
+    log("Http Test, dump data: ");
+    
+    std::string str = "";
+    for (unsigned int i = 0; i < buffer->size(); i++)
+    {
+        str = str + buffer->at(i);
+    }
+    log ("get str is %s", str.c_str());
+    log("\n");
+    if (response->getHttpRequest()->getReferenceCount() != 2)
+    {
+        log("request ref count not 2, is %d", response->getHttpRequest()->getReferenceCount());
+    }
+    
+    std::string file_name = conf().at("NAME");
+    std::string file_with_path;
+    FindPathWithFile(file_name,
+                     file_with_path);
+    
+    FILE* file = fopen(file_with_path.c_str(), "wb");
+    if (file)
+    {
+        fputs(str.c_str(), file);
+        fclose(file);
+    }
+    
+    CheckUpdate();
+}

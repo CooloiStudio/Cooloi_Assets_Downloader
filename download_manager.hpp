@@ -11,6 +11,11 @@
 
 #include "cocos2d.h"
 
+#include "extensions/cocos-ext.h"
+#include "network/HttpClient.h"
+
+using namespace cocos2d;
+
 class AssetsDownloader;
 
 enum class DownloadStage
@@ -86,6 +91,9 @@ private:
     
     int FindPathWithFile(const std::string file_name,
                          std::string &path_with_file);
+    
+    
+    void OnHttpRequestCompleted(cocos2d::network::HttpClient *sender, cocos2d::network::HttpResponse *response);
     
 #pragma mark - Get&Set
 public:
