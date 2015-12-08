@@ -104,6 +104,12 @@ void DownloadManager::update(float dt)
     
     switch (stage())
     {
+        case DownloadStage ::kLoadUpdate:
+        {
+            CheckUpdate();
+        }
+        break;
+
         case DownloadStage ::kGetUpdate:
         {
             GetUpdate();
@@ -165,16 +171,16 @@ int DownloadManager::LoadUpdate()
 {
     log("\nStage : Download update info.\n");
     set_stage(DownloadStage::kLoadUpdate);
-//    Download(conf_["URL"]);
+    Download(conf_["URL"]);
     
-    network::HttpRequest* request = new (std::nothrow) network::HttpRequest();
-    // required fields
-    request->setUrl(conf().at("URL").c_str());
-    request->setRequestType(network::HttpRequest::Type::GET);
-    request->setResponseCallback(CC_CALLBACK_2(DownloadManager::OnHttpRequestCompleted, this));
-    request->setTag("LoadUpdate");
-    network::HttpClient::getInstance()->send(request);
-    request->release();
+//    network::HttpRequest* request = new (std::nothrow) network::HttpRequest();
+//    // required fields
+//    request->setUrl(conf().at("URL").c_str());
+//    request->setRequestType(network::HttpRequest::Type::GET);
+//    request->setResponseCallback(CC_CALLBACK_2(DownloadManager::OnHttpRequestCompleted, this));
+//    request->setTag("LoadUpdate");
+//    network::HttpClient::getInstance()->send(request);
+//    request->release();
     
     return 0;
 } // LoadUpdate
@@ -185,6 +191,7 @@ int DownloadManager::CheckUpdate()
     set_stage(DownloadStage::kCheckUpdate);
     auto ret = 0;
     if ("" != now_downloading_) push_finished(now_downloading());
+    
 //    ret = ReadConf(conf_["NAME"], pkg_map_);
 //    ret = ReadConf(conf_["LOCAL_NAME"], loc_map_);
     
@@ -564,5 +571,5 @@ void DownloadManager::OnHttpRequestCompleted(cocos2d::network::HttpClient *sende
         fclose(file);
     }
     
-    CheckUpdate();
+    scheduleUpdate();
 }
