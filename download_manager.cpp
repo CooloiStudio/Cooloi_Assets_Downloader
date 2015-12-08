@@ -537,7 +537,7 @@ void DownloadManager::OnHttpRequestCompleted(cocos2d::network::HttpClient *sende
     
     if (!response->isSucceed())
     {
-        MessageBox("请稍后重试", "服务器异常");
+        MessageBox("请稍后重试", "网络连接好像有些不对劲儿");
         log("response failed");
         log("error buffer: %s", response->getErrorBuffer());
         return;
